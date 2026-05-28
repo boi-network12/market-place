@@ -1,6 +1,11 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 type Theme = "light" | "dark";
 
@@ -10,43 +15,74 @@ interface ThemeContextType {
   mounted: boolean;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext =
+  createContext<ThemeContextType | undefined>(
+    undefined
+  );
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
-  const [mounted, setMounted] = useState(false);
+export function ThemeProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [theme, setTheme] =
+    useState<Theme>("light");
 
-  // Initialize theme safely
+  const [mounted, setMounted] =
+    useState(false);
+
+  // Initialize theme ONCE
   useEffect(() => {
-    // This runs only on the client after mount
-    const stored = localStorage.getItem("theme") as Theme | null;
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const storedTheme =
+      localStorage.getItem("theme") as
+        | Theme
+        | null;
 
-    const initialTheme: Theme = stored ?? (prefersDark ? "dark" : "light");
+    const prefersDark =
+      window.matchMedia(
+        "(prefers-color-scheme: dark)"
+      ).matches;
 
-    // Update only if different (prevents unnecessary re-renders)
-    if (initialTheme !== theme) {
-         // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTheme(initialTheme);
-    }
+    const initialTheme =
+      storedTheme ??
+      (prefersDark ? "dark" : "light");
+
+    setTheme(initialTheme);
+
+    document.documentElement.classList.toggle(
+      "dark",
+      initialTheme === "dark"
+    );
+
     setMounted(true);
-  }, [theme]); // Note: we keep theme as dependency to avoid stale closure
+  }, []);
 
-  // Apply theme class to document
+  // Update HTML class when theme changes
   useEffect(() => {
-    if (mounted) {
-      document.documentElement.classList.toggle("dark", theme === "dark");
-    }
+    if (!mounted) return;
+
+    document.documentElement.classList.toggle(
+      "dark",
+      theme === "dark"
+    );
+
+    localStorage.setItem("theme", theme);
   }, [theme, mounted]);
 
   const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
+    setTheme((prev) =>
+      prev === "light" ? "dark" : "light"
+    );
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, mounted }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        toggleTheme,
+        mounted,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );
@@ -54,8 +90,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useTheme() {
   const context = useContext(ThemeContext);
+
   if (!context) {
-    throw new Error("useTheme must be used within ThemeProvider");
+    throw new Error(
+      "useTheme must be used within ThemeProvider"
+    );
   }
+
   return context;
 }

@@ -30,6 +30,9 @@ const config: Config = {
           "2xl": "1400px",
         },
       },
+      animation: {
+        'spin-slow': 'spin 3s linear infinite',
+      },
     },
   },
   plugins: [],

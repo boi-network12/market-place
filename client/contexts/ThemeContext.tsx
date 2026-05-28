@@ -46,7 +46,8 @@ export function ThemeProvider({
     const initialTheme =
       storedTheme ??
       (prefersDark ? "dark" : "light");
-
+      
+    // Eslint-disable-next-line react-hooks/exhaustive-deps
     setTheme(initialTheme);
 
     document.documentElement.classList.toggle(

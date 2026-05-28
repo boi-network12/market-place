@@ -6,7 +6,7 @@ import Link from "next/link";
 import HeroSection from "@/components/home/HeroSection";
 import CategoryGrid from "@/components/home/CategoryGrid";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
-import Newsletter from "@/components/home/Newsletter";
+import Footer from "@/components/home/Footer";
 
 export default function Home() {
   return (
@@ -14,7 +14,7 @@ export default function Home() {
       <HeroSection />
       <CategoryGrid />
       <FeaturedProducts />
-      <Newsletter />
+      <Footer />
     </div>
   );
 }

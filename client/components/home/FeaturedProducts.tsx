@@ -108,7 +108,7 @@ export default function FeaturedProducts() {
             </p>
           </div>
           <Link
-            href="/products"
+            href="/products-view"
             className="mt-4 sm:mt-0 inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-medium hover:gap-3 transition-all"
           >
             View All Products

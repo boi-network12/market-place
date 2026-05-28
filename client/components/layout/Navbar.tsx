@@ -35,7 +35,7 @@ export default function Navbar() {
           {/* Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Theme Toggle */}
-            <button
+            {/* <button
               onClick={toggleTheme}
               className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors"
               aria-label="Toggle theme"
@@ -69,7 +69,7 @@ export default function Navbar() {
                   />
                 </svg>
               )}
-            </button>
+            </button> */}
 
             {/* Login */}
             <Link

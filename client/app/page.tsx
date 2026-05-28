@@ -1,10 +1,20 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import HeroSection from "@/components/home/HeroSection";
+import CategoryGrid from "@/components/home/CategoryGrid";
+import FeaturedProducts from "@/components/home/FeaturedProducts";
+import Newsletter from "@/components/home/Newsletter";
 
 export default function Home() {
   return (
-    <div className="">
-      
+    <div className="min-h-screen">
+      <HeroSection />
+      <CategoryGrid />
+      <FeaturedProducts />
+      <Newsletter />
     </div>
   );
 }
-// page.tsx is the default page that is rendered when you visit the root URL of your Next.js application. You can customize this page to display whatever content you want. In this example, we have an empty div, but you can add any components or content you like here.

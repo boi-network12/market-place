@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function LoadingBar() {
+// Separate component that uses the hooks
+function LoadingBarContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const pathname = usePathname();
@@ -42,7 +43,6 @@ export default function LoadingBar() {
 
     startLoading();
     
-    // Simulate loading completion
     const timer = setTimeout(() => {
       endLoading();
     }, 500);
@@ -73,5 +73,16 @@ export default function LoadingBar() {
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+// Main export with Suspense boundary
+import { Suspense } from "react";
+
+export default function LoadingBar() {
+  return (
+    <Suspense fallback={null}>
+      <LoadingBarContent />
+    </Suspense>
   );
 }

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { BiLink, BiLogoGithub, BiLogoLinkedin, BiLogoTwitter } from "react-icons/bi";
+import TerminalLogo from "../ui/TerminalLogo";
 
 declare global {
   interface Window {
@@ -256,9 +257,10 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="col-span-2 lg:col-span-1">
             <Link href="/" className="inline-block mb-4">
-              <span className="text-2xl font-bold bg-gradient-to-r from-white to-indigo-400 bg-clip-text text-transparent">
+              {/* <span className="text-2xl font-bold bg-gradient-to-r from-white to-indigo-400 bg-clip-text text-transparent">
                 Kamdi
-              </span>
+              </span> */}
+              <TerminalLogo />
             </Link>
             <p className="text-gray-400 text-sm mb-4">
               Next-generation enterprise security solutions for modern organizations.

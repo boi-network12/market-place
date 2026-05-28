@@ -2,6 +2,9 @@
 
 import { useTheme } from "@/contexts/ThemeContext";
 import Link from "next/link";
+import TerminalLogo from "../ui/TerminalLogo";
+import HackerLogo from "../ui/HackerLogo";
+import AnimatedLogo from "../ui/AnimatedLogo";
 
 export default function Navbar() {
   const { theme, toggleTheme, mounted } =
@@ -19,7 +22,7 @@ export default function Navbar() {
             href="/"
             className="flex items-center space-x-2 min-w-0"
           >
-            <div className="h-8 w-8 flex-shrink-0 rounded-lg bg-gradient-to-r from-indigo-600 to-indigo-500 dark:from-indigo-500 dark:to-indigo-400" />
+             <AnimatedLogo />
 
             <span className="truncate text-base sm:text-xl font-bold text-gray-900 dark:text-white">
               Market

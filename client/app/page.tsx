@@ -1,8 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
 import HeroSection from "@/components/home/HeroSection";
 import CategoryGrid from "@/components/home/CategoryGrid";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
@@ -16,5 +13,6 @@ export default function Home() {
       <FeaturedProducts />
       <Footer />
     </div>
-  );
+  )
 }
+// this page is a root page and should not be wrapped in a suspense boundary or evn wrap with auth cos both user and non user can see this page and it contain sestive stuff but imma us estatement to handle the loading state of the page and show a loader until the data is loaded

@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import Navbar from "@/components/layout/Navbar";
 import LoadingBar from "@/components/ui/LoadingBar";
 import PageLoader from "@/components/ui/PageLoader";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -175,7 +176,6 @@ export default function RootLayout({
         
         {/* Security headers */}
         <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
-        <meta httpEquiv="X-Frame-Options" content="DENY" />
         <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         
@@ -239,15 +239,17 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-white dark:bg-gray-950">
+      <body className="min-h-full flex flex-col bg-white dark:bg-gray-950" suppressHydrationWarning>
         <ThemeProvider>
-          <LoadingBar />
-          <Navbar />
-          <Suspense fallback={<PageLoader />}>
-            <main className="flex-1">
-              {children}
-            </main>
-          </Suspense>
+          <AuthProvider>
+            <LoadingBar />
+            <Navbar />
+            <Suspense fallback={<PageLoader />}>
+              <main className="flex-1">
+                {children}
+              </main>
+            </Suspense>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

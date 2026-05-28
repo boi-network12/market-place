@@ -1,0 +1,192 @@
+// services/email.service.ts
+import nodemailer from 'nodemailer';
+import { logger } from '../utils/logger';
+
+interface EmailOptions {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+}
+
+export class EmailService {
+  private static transporter: nodemailer.Transporter;
+
+  static initialize() {
+    // Zoho Mail requires specific configuration
+      this.transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.zoho.com',
+      port: parseInt(process.env.SMTP_PORT || '465'),
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      // Make sure sender matches auth user
+      from: process.env.SMTP_USER, // Use authenticated user as default
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+  }
+
+
+  /**
+   * Verify transporter connection (call once after initialize)
+   */
+  static async verifyConnection(): Promise<boolean> {
+    try {
+      await this.transporter.verify();
+      logger.info('✅ Email service connected successfully (Zoho Mail)');
+      return true;
+    } catch (error) {
+      logger.error('❌ Email service connection failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Send generic email
+   */
+  static async sendEmail(options: EmailOptions): Promise<void> {
+    try {
+      const fromAddress = process.env.EMAIL_FROM === 'noreply@kamdimarket.com' 
+      ? process.env.SMTP_USER  // Fallback to authenticated user
+      : process.env.EMAIL_FROM;
+
+      
+      await this.transporter.sendMail({
+        from: process.env.EMAIL_FROM,
+        ...options,
+      });
+
+      logger.info(`📧 Email sent successfully to: ${options.to}`);
+    } catch (error) {
+      logger.error(`❌ Failed to send email to ${options.to}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send Welcome Email
+   */
+  static async sendWelcomeEmail(email: string, name: string): Promise<void> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #4f46e5;">Welcome to Kamdi Market! 🎉</h1>
+        <p>Hi ${name},</p>
+        <p>Thank you for joining Kamdi Market - your trusted marketplace for cybersecurity tools and enterprise solutions.</p>
+        <p>To get started:</p>
+        <ul>
+          <li>Complete your profile</li>
+          <li>Explore our products</li>
+          <li>Enable two-factor authentication</li>
+        </ul>
+        <a href="${process.env.FRONTEND_URL}/verify-email" 
+           style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0;">
+          Verify Your Email
+        </a>
+        <p>Stay secure,<br>The Kamdi Team</p>
+      </div>
+    `;
+
+    await this.sendEmail({
+      to: email,
+      subject: 'Welcome to Kamdi Market!',
+      html,
+    });
+  }
+
+  // 
+  static async sendVerificationEmail(
+    email: string,
+    data: { name: string; verificationLink: string }
+  ): Promise<void> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #4f46e5;">Verify Your Email Address ✅</h1>
+        <p>Hi ${data.name},</p>
+        <p>Please verify your email address to complete your registration on Kamdi Market.</p>
+        <p>Click the button below to verify your email:</p>
+        
+        <a href="${data.verificationLink}" 
+          style="background-color: #4f46e5; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0; font-weight: bold;">
+          Verify Email Address
+        </a>
+
+        <p style="color: #ef4444;"><strong>This link expires in 24 hours.</strong></p>
+        <p>If you didn't create an account, you can safely ignore this email.</p>
+        
+        <p>Stay secure,<br>The Kamdi Team</p>
+      </div>
+    `;
+
+    await this.sendEmail({
+      to: email,
+      subject: 'Verify Your Email - Kamdi Market',
+      html,
+    });
+  }
+
+  /**
+   * Send New Login Alert
+   */
+  static async sendLoginAlert(
+    email: string,
+    details: { device: string; location: string; time: Date }
+  ): Promise<void> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #eab308;">⚠️ New Login Detected</h2>
+        <p>We noticed a new login to your Kamdi Market account:</p>
+        <ul>
+          <li><strong>Device:</strong> ${details.device}</li>
+          <li><strong>Location:</strong> ${details.location}</li>
+          <li><strong>Time:</strong> ${details.time.toLocaleString()}</li>
+        </ul>
+        <p>If this was you, you can safely ignore this message.</p>
+        <p><strong>If this wasn't you, please secure your account immediately.</strong></p>
+        <a href="${process.env.FRONTEND_URL}/security" 
+           style="background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0;">
+          Secure Your Account
+        </a>
+      </div>
+    `;
+
+    await this.sendEmail({
+      to: email,
+      subject: '⚠️ New Login to Your Kamdi Market Account',
+      html,
+    });
+  }
+
+  static async sendPasswordResetEmail(
+    email: string,
+    data: { name: string; resetLink: string }
+  ): Promise<void> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #4f46e5;">Reset Your Password 🔑</h2>
+        <p>Hi ${data.name},</p>
+        <p>You requested to reset your password on Kamdi Market.</p>
+        <p>Click the button below to set a new password:</p>
+        
+        <a href="${data.resetLink}" 
+           style="background-color: #4f46e5; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0; font-weight: bold;">
+          Reset Password
+        </a>
+
+        <p style="color: #ef4444;"><strong>This link expires in 15 minutes.</strong></p>
+        <p>If you didn't request this, please ignore this email.</p>
+        
+        <p>Stay secure,<br>The Kamdi Team</p>
+      </div>
+    `;
+
+    await this.sendEmail({
+      to: email,
+      subject: 'Reset Your Kamdi Market Password',
+      html,
+    });
+  }
+}

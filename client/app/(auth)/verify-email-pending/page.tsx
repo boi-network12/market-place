@@ -4,27 +4,44 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { Mail, RefreshCw, CheckCircle } from 'lucide-react';
+import { Mail, RefreshCw } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function VerifyEmailPendingPage() {
   const { user, resendVerificationEmail, isLoading } = useAuth();
+  const router = useRouter();
+
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [resendMessage, setResendMessage] = useState('');
   const [countdown, setCountdown] = useState(0);
 
-  const email = user?.email || sessionStorage.getItem('pendingVerificationEmail');
+  // ✅ Fixed: Use lazy initializer instead of setState in useEffect
+  const [email, setEmail] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('pendingVerificationEmail');
+    }
+    return null;
+  });
+
+  const userEmail = user?.email || email;
+
+  // Redirect if already verified
+  useEffect(() => {
+    if (user?.emailVerified) {
+      router.push('/');
+    }
+  }, [user?.emailVerified, router]);
 
   const handleResendEmail = async () => {
     if (countdown > 0) return;
-    
+
     setResendStatus('sending');
     try {
       await resendVerificationEmail();
       setResendStatus('sent');
       setResendMessage('Verification email sent! Please check your inbox.');
-      setCountdown(60); // 60 second cooldown
-      
-      // Start countdown
+      setCountdown(60);
+
       const interval = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
@@ -41,13 +58,6 @@ export default function VerifyEmailPendingPage() {
     }
   };
 
-  useEffect(() => {
-    // Check if user is already verified
-    if (user?.emailVerified) {
-      window.location.href = '/';
-    }
-  }, [user]);
-
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
@@ -59,10 +69,10 @@ export default function VerifyEmailPendingPage() {
             Verify Your Email
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            We&aposve sent a verification link to
+            We&apos;ve sent a verification link to
           </p>
           <p className="font-medium text-indigo-600 dark:text-indigo-400 mt-1">
-            {email || 'your email address'}
+            {userEmail || 'your email address'}
           </p>
         </div>
 
@@ -71,13 +81,13 @@ export default function VerifyEmailPendingPage() {
             <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
               <p className="text-sm text-blue-700 dark:text-blue-300">
                 📧 Please check your email inbox and click the verification link to activate your account.
-                Don&apost forget to check your spam folder!
+                Don&apos;t forget to check your spam folder!
               </p>
             </div>
 
             {resendMessage && (
               <div className={`p-3 rounded-lg text-sm ${
-                resendStatus === 'sent' 
+                resendStatus === 'sent'
                   ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
                   : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800'
               }`}>

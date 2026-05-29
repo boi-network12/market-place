@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { Suspense } from 'react';
+import LoadingBar from '@/components/ui/LoadingBar';
 
 function VerifyEmailContent() {
   const router = useRouter();
@@ -115,12 +116,7 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
-        </div>
-      </div>
+      <LoadingBar />
     }>
       <VerifyEmailContent />
     </Suspense>

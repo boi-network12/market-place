@@ -143,7 +143,7 @@ export const metadata: Metadata = {
     apple: [
       { url: "/apple-icon-180.png", sizes: "180x180", type: "image/png" },
     ],
-    shortcut: ["/shortcut-icon.png"],
+    shortcut: ["/icon-192.png"],
   },
   other: {
     "google-site-verification": process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "",

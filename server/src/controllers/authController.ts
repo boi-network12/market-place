@@ -9,6 +9,7 @@ import { AuthService } from '../services/authService';
 import { AppError } from '../middlewares/errorMiddleware';
 import { EmailService } from '../services/emailService';
 import { NotificationService } from '../services/notificationService';
+import { PasswordResetService } from '../services/passwordResetService';
 
 const yeyeDomain = ".kamdimarket-place.vercel.app";
 
@@ -400,28 +401,40 @@ export class AuthController {
     try {
       const { email } = req.body;
 
-      const user = await User.findOne({ email });
-      if (!user) {
-        // Don't reveal if email exists (security)
-        return res.status(200).json({
-          success: true,
-          message: 'If an account with that email exists, a reset link has been sent.',
-        });
+      if (!email) {
+        throw new AppError('Email is required', 400);
       }
 
-      const resetToken = AuthService.generateResetToken(user); // You'll need to implement this
-      const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-
-      await EmailService.sendPasswordResetEmail(user.email, {
-        name: user.fullName,
-        resetLink,
-      });
-
-      logger.info(`Password reset requested for: ${email}`);
+      const result = await PasswordResetService.requestPasswordReset(email);
 
       res.status(200).json({
+        success: result.success,
+        message: result.message,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // ====================== VERIFY RESET CODE ======================
+  static async verifyResetCode(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email, code } = req.body;
+
+      if (!email || !code) {
+        throw new AppError('Email and reset code are required', 400);
+      }
+
+      const result = await PasswordResetService.verifyResetCode(email, code);
+
+      if (!result.valid) {
+        throw new AppError(result.message, 400);
+      }
+
+      res.json({
         success: true,
-        message: 'If an account with that email exists, a reset link has been sent.',
+        message: result.message,
+        data: { verified: true }
       });
     } catch (error) {
       next(error);
@@ -430,40 +443,26 @@ export class AuthController {
 
   // ====================== RESET PASSWORD ======================
   static async resetPassword(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { token, newPassword } = req.body;
+  try {
+      const { email, code, newPassword } = req.body;
 
-      const decoded = AuthService.verifyResetToken(token);
-      if (!decoded) {
-        throw new AppError('Invalid or expired reset token', 400);
+      if (!email || !code || !newPassword) {
+        throw new AppError('Email, reset code, and new password are required', 400);
       }
 
-      const user = await User.findById(decoded.userId);
-      if (!user) throw new AppError('User not found', 404);
+      if (newPassword.length < 8) {
+        throw new AppError('Password must be at least 8 characters long', 400);
+      }
 
-      user.password = newPassword; // Will be hashed by pre-save middleware
-      await user.save();
+      const result = await PasswordResetService.resetPassword(email, code, newPassword);
 
-      // Invalidate all sessions for security
-      await Session.deleteMany({ userId: user._id });
-
-      // ✅ ADD NOTIFICATION: Password changed
-      await NotificationService.createNotification({
-        userId: user._id,
-        type: 'security',
-        title: 'Password Changed Successfully 🔒',
-        message: 'Your password has been changed. If you did not perform this action, please contact support immediately.',
-        priority: 'high',
-        actionUrl: '/security',
-        actionLabel: 'Review Security',
-        data: { changeTime: new Date() }
-      }).catch(err => logger.error('Password change notification failed:', err));
-
-      logger.info(`Password reset successful for user: ${user.email}`);
+      if (!result.success) {
+        throw new AppError(result.message, 400);
+      }
 
       res.json({
         success: true,
-        message: 'Password reset successful. Please login with your new password.',
+        message: result.message,
       });
     } catch (error) {
       next(error);

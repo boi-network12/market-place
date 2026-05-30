@@ -85,6 +85,10 @@ interface AuthContextType {
   updateUser: (data: Partial<User>) => void;
   verifyEmail: (token: string) => Promise<void>;
   resendVerificationEmail: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  verifyResetCode: (email: string, code: string) => Promise<void>;
+  resetPassword: (email: string, code: string, newPassword: string) => Promise<void>;
+  resendResetCode: (email: string) => Promise<void>;
 }
 
 // ==================== CONTEXT ====================
@@ -391,6 +395,86 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // ====================== FORGOT PASSWORD FUNCTIONS ======================
+  
+  const forgotPassword = async (email: string) => {
+    try {
+      setIsLoading(true);
+      const response = await api.forgotPassword(email) as ApiResponse;
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to send reset code');
+      }
+      
+      // Store email for the reset flow
+      sessionStorage.setItem('resetEmail', email);
+      
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to send reset code';
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const verifyResetCode = async (email: string, code: string) => {
+    try {
+      setIsLoading(true);
+      const response = await api.verifyResetCode(email, code) as ApiResponse;
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Invalid or expired code');
+      }
+      
+      // Store verified status
+      sessionStorage.setItem('resetVerified', 'true');
+      
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to verify code';
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const resetPassword = async (email: string, code: string, newPassword: string) => {
+    try {
+      setIsLoading(true);
+      const response = await api.resetPassword(email, code, newPassword) as ApiResponse;
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to reset password');
+      }
+      
+      // Clear stored data
+      sessionStorage.removeItem('resetEmail');
+      sessionStorage.removeItem('resetVerified');
+      
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to reset password';
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const resendResetCode = async (email: string) => {
+    try {
+      setIsLoading(true);
+      const response = await api.forgotPassword(email) as ApiResponse;
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to resend code');
+      }
+      
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to resend code';
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const isEmailVerified = user?.emailVerified || false;
 
   const value: AuthContextType = {
@@ -408,6 +492,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     updateUser,
     verifyEmail,
     resendVerificationEmail,
+    forgotPassword,
+    verifyResetCode,
+    resetPassword,
+    resendResetCode,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

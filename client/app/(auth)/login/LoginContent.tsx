@@ -6,12 +6,14 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Eye, EyeOff } from "lucide-react";
+import ForgotPasswordModal from "@/components/auth/ForgotPasswordModal";
 
 export default function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,6 +23,8 @@ export default function LoginContent() {
   const [loading, setLoading] = useState(false);
   const successMessage = searchParams.get('verified') === 'true'
     ? 'Email verified successfully! You can now log in.'
+    : searchParams.get('reset') === 'true'
+    ? 'Password reset successfully! Please login with your new password.'
     : '';
 
   useEffect(() => {
@@ -57,6 +61,10 @@ export default function LoginContent() {
 
   return (
     <>
+      <ForgotPasswordModal 
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+      />
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           Welcome back
@@ -127,12 +135,13 @@ export default function LoginContent() {
               Remember me
             </span>
           </label>
-          <Link
-            href="/forgot-password"
+          <button
+            type="button"
+            onClick={() => setShowForgotPassword(true)}
             className="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
           >
             Forgot password?
-          </Link>
+          </button>
         </div>
 
         <button

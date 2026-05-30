@@ -60,6 +60,10 @@ export interface IUser extends Document {
   phoneNumber?: string;
   avatar?: string;
 
+  // Password Reset (ADD THESE TWO LINES)
+  passwordResetCode?: string;
+  passwordResetExpires?: Date;
+  
   // Location Information
   location: {
     country: string;
@@ -145,6 +149,8 @@ const UserSchema = new Schema<IUser>(
       trim: true,
     },
     password: { type: String, required: true, minlength: 8 },
+    passwordResetCode: { type: String },
+    passwordResetExpires: { type: Date },
     fullName: { type: String, required: true, trim: true },
 
     // Role & Seller Management

@@ -31,6 +31,7 @@ router.post('/become-seller', authMiddleware, AuthController.becomeSeller);
 router.post('/refresh-token', AuthController.refreshToken);
 router.post('/resend-verification', AuthController.resendVerificationEmail);
 router.post('/forgot-password', AuthController.forgotPassword);
+router.post('/verify-reset-code', AuthController.verifyResetCode);
 router.post('/reset-password', AuthController.resetPassword);
 router.post('/verify-email/:token', AuthController.verifyEmail);
 

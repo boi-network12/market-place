@@ -189,4 +189,78 @@ export class EmailService {
       html,
     });
   }
+
+  /**
+ * Send Password Reset Code Email (6-digit code)
+ */
+  static async sendPasswordResetCodeEmail(
+    email: string,
+    data: { name: string; code: string; expiresIn: number }
+  ): Promise<void> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #4f46e5; margin: 0;">Kamdi Market</h1>
+          <p style="color: #666; margin-top: 5px;">Password Reset Request</p>
+        </div>
+        
+        <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+          <p style="margin: 0 0 10px 0;">Hi ${data.name},</p>
+          <p style="margin: 0 0 20px 0;">We received a request to reset your password. Use the verification code below to reset your password:</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #4f46e5; background: white; padding: 15px; border-radius: 8px; display: inline-block; border: 1px solid #e0e0e0;">
+              ${data.code}
+            </div>
+          </div>
+          
+          <p style="margin: 0 0 5px 0; color: #ef4444;"><strong>⏰ This code will expire in ${data.expiresIn} minutes.</strong></p>
+          <p style="margin: 0; font-size: 14px; color: #666;">If you didn't request this, you can safely ignore this email.</p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+          <p style="font-size: 12px; color: #999;">Stay secure,<br>The Kamdi Team</p>
+        </div>
+      </div>
+    `;
+    
+    await this.sendEmail({
+      to: email,
+      subject: '🔐 Password Reset Code - Kamdi Market',
+      html,
+    });
+  }
+
+  /**
+ * Send Password Changed Confirmation Email
+ */
+  static async sendPasswordChangedEmail(
+    email: string,
+    data: { name: string }
+  ): Promise<void> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #4f46e5; margin: 0;">Kamdi Market</h1>
+          <p style="color: #666; margin-top: 5px;">Password Changed Successfully</p>
+        </div>
+        
+        <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #bbf7d0;">
+          <p style="margin: 0 0 10px 0;">Hi ${data.name},</p>
+          <p style="margin: 0 0 10px 0;">✅ Your password has been successfully changed.</p>
+          <p style="margin: 0; font-size: 14px; color: #666;">If you did not make this change, please contact our support team immediately.</p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+          <a href="${process.env.FRONTEND_URL}/login" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Login to Your Account</a>
+        </div>
+      </div>
+    `;
+    
+    await this.sendEmail({
+      to: email,
+      subject: '✅ Password Changed - Kamdi Market',
+      html,
+    });
+  }
 }

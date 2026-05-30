@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import connectDB from './src/config/database';
-import { connectRedis, redisClient } from './src/config/redis';
+// import { connectRedis, redisClient } from './src/config/redis';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import { logger } from './src/utils/logger';
@@ -68,7 +68,7 @@ if (process.env.VERCEL !== '1') {
   
   // Connect to databases locally
   connectDB();
-  if (process.env.REDIS_URL) connectRedis();
+  // if (process.env.REDIS_URL) connectRedis();
   EmailService.initialize();
 }
 

@@ -1,11 +1,24 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
+   const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+
+
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
+    <div className={`
+        min-h-[calc(100vh-4rem)] 
+        flex items-center justify-center 
+        px-4 py-12 sm:px-6 lg:px-8
+        ${mounted ? 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950' : 'bg-gray-50 dark:bg-gray-900'}
+      `}>
       <div className="w-full max-w-md">
         {/* Logo/Brand */}
         <div className="text-center mb-8">

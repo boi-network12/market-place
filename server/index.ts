@@ -21,10 +21,11 @@ const app = express();
 // Updated CORS configuration
 const corsOptions = {
     origin: function(origin: any, callback: any) {
-        const allowedOrigins = [
-             process.env.FRONTEND_URL
-             || 'http://localhost:3000'
-        ].filter(Boolean);
+        // const allowedOrigins = [
+        //      process.env.FRONTEND_URL
+        //      || 'http://localhost:3000'
+        // ].filter(Boolean);
+        const allowedOrigins = ['*', 'https://kamdimarket-place.vercel.app']; // Allow all origins for testing, tighten in
         
         // Allow requests with no origin (like mobile apps)
         if (!origin) return callback(null, true);

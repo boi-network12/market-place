@@ -19,24 +19,31 @@ import { setupCleanupHandlers } from './src/utils/cleanup';
 const app = express();
 
 // Updated CORS configuration
+// server.ts - Update your CORS config
 const corsOptions = {
     origin: function(origin: any, callback: any) {
         const allowedOrigins = [
-             process.env.FRONTEND_URL
-             || 'http://localhost:3000'
+            process.env.FRONTEND_URL,
+            'https://kamdimarket-place.vercel.app',
+            'https://kamdimarket-place-backend.vercel.app',
+            'http://localhost:3000',
+            'http://localhost:3001'
         ].filter(Boolean);
         
         // Allow requests with no origin (like mobile apps)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        
+        // Check if origin is allowed
+        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
             callback(null, true);
         } else {
-            callback(null, true); // Allow all for testing, tighten in production
+            callback(new Error('Not allowed by CORS'));
         }
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Cookie'],
+    exposedHeaders: ['Set-Cookie'],
     optionsSuccessStatus: 200
 };
 

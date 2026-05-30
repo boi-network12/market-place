@@ -207,6 +207,13 @@ export class AuthController {
       // Generate tokens
       const { accessToken, refreshToken } = AuthService.generateTokens(user, rememberMe ? '30d' : '7d');
 
+      // Cookie configuration
+        const isProduction = process.env.NODE_ENV === 'production';
+        const frontendDomain = process.env.FRONTEND_URL?.replace('https://', '').replace('http://', '');
+
+        // For Vercel deployments, don't set domain (defaults to current domain)
+        const cookieDomain = !isProduction && frontendDomain ? frontendDomain : undefined;
+
       // Invalidate old sessions for same device
       await Session.updateMany(
         { userId: user._id, deviceId: deviceInfo.deviceId, isActive: true },
@@ -238,18 +245,23 @@ export class AuthController {
 
       // Set cookies
       res.cookie('token', accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000,
-      });
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax', // 'none' required for cross-site requests
+            maxAge: (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000,
+            domain: cookieDomain,
+            path: '/',
+        });
 
-      res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000,
-      });
+        // Set refresh token cookie
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+            domain: cookieDomain,
+            path: '/',
+        });
 
       // ✅ ADD NOTIFICATION: New login notification
       await NotificationService.createNotification({
@@ -334,19 +346,23 @@ export class AuthController {
       session.lastActivity = new Date();
       await session.save();
 
+      const isProduction = process.env.NODE_ENV === 'production';
+
       res.cookie('token', accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: '/'
       });
 
       if (newRefreshToken) {
         res.cookie('refreshToken', newRefreshToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
+          secure: isProduction,
+          sameSite: isProduction ? 'none' : 'lax',
           maxAge: 30 * 24 * 60 * 60 * 1000,
+          path: '/'
         });
       }
 

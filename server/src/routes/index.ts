@@ -17,10 +17,6 @@ router.get('/', (req, res) => {
     endpoints: {
       auth: '/api/auth',
       notifications: '/api/notifications',
-      users: '/api/users',
-      products: '/api/products',
-      orders: '/api/orders',
-      admin: '/api/admin',
     },
   });
 });

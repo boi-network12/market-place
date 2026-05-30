@@ -240,19 +240,15 @@ export class AuthController {
       res.cookie('token', accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax', // Changed from 'strict' to 'lax'
-        domain: process.env.NODE_ENV === 'production' ? yeyeDomain : undefined, // Add domain for production
+        sameSite: 'strict',
         maxAge: (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000,
-        path: '/',
       });
 
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax', // Changed from 'strict' to 'lax'
-        domain: process.env.NODE_ENV === 'production' ? yeyeDomain : undefined,
+        sameSite: 'strict',
         maxAge: (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000,
-        path: '/',
       });
 
       // ✅ ADD NOTIFICATION: New login notification

@@ -8,10 +8,6 @@ const router = Router();
 // API version
 router.use('/auth', authRoutes);
 router.use('/notifications', notificationRoutes);
-// router.use('/users', userRoutes);
-// router.use('/products', productRoutes);
-// router.use('/orders', orderRoutes);
-// router.use('/admin', adminRoutes);
 
 // Root API info
 router.get('/', (req, res) => {

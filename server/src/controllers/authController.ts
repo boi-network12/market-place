@@ -10,6 +10,8 @@ import { AppError } from '../middlewares/errorMiddleware';
 import { EmailService } from '../services/emailService';
 import { NotificationService } from '../services/notificationService';
 
+const yeyeDomain = ".kamdimarket-place.vercel.app";
+
 export class AuthController {
   // ====================== REGISTER ======================
   static async register(req: Request, res: Response, next: NextFunction) {
@@ -238,15 +240,19 @@ export class AuthController {
       res.cookie('token', accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'lax', // Changed from 'strict' to 'lax'
+        domain: process.env.NODE_ENV === 'production' ? yeyeDomain : undefined, // Add domain for production
         maxAge: (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000,
+        path: '/',
       });
 
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'lax', // Changed from 'strict' to 'lax'
+        domain: process.env.NODE_ENV === 'production' ? yeyeDomain : undefined,
         maxAge: (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000,
+        path: '/',
       });
 
       // ✅ ADD NOTIFICATION: New login notification

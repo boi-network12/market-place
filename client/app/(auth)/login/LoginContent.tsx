@@ -42,7 +42,14 @@ export default function LoginContent() {
 
     } catch (err: unknown) {
       const error = err as { message?: string };
-      setError(error.message || "An unexpected error occurred. Please try again.");
+      // ✅ Check for email verification error specifically
+      if (error.message?.toLowerCase().includes('verify your email')) {
+        // Store email for resend
+        sessionStorage.setItem('pendingVerificationEmail', formData.email);
+        router.push('/verify-email-pending');
+      } else {
+        setError(error.message || "An unexpected error occurred. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

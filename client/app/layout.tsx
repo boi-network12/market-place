@@ -7,6 +7,7 @@ import Navbar from "@/components/layout/Navbar";
 import LoadingBar from "@/components/ui/LoadingBar";
 import PageLoader from "@/components/ui/PageLoader";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -242,16 +243,19 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-white dark:bg-gray-950" suppressHydrationWarning>
         <ThemeProvider>
           <AuthProvider>
-            <LoadingBar />
-            <Navbar />
-            <Suspense fallback={<PageLoader />}>
-              <main className="flex-1">
-                {children}
-              </main>
-            </Suspense>
+            <NotificationProvider>
+              <LoadingBar />
+                <Navbar />
+                <Suspense fallback={<PageLoader />}>
+                  <main className="flex-1">
+                    {children}
+                  </main>
+                </Suspense>
+            </NotificationProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
   );
 }
+// app/layout.tsx

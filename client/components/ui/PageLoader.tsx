@@ -2,10 +2,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import AnimatedLogo from "./AnimatedLogo";
 
 export default function PageLoader() {
   return (
-    <div className="min-h-[60vh] flex items-center justify-center bg-white dark:bg-gray-950">
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-950">
       <div className="text-center">
         {/* Animated Logo */}
         <motion.div
@@ -14,9 +15,7 @@ export default function PageLoader() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl">
-            <span className="text-3xl font-bold text-white">K</span>
-          </div>
+          <AnimatedLogo />
         </motion.div>
 
         {/* Loading Spinner */}
@@ -38,7 +37,7 @@ export default function PageLoader() {
             className="space-y-2"
           >
             <p className="text-gray-600 dark:text-gray-400 font-medium">
-              Loading Kamdi Market
+              Loading ...
             </p>
             <div className="flex gap-1 justify-center">
               <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-bounce" style={{ animationDelay: '0ms' }} />

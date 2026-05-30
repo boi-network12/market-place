@@ -107,6 +107,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/'];
   const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
 
+
+  // const loadUser = useCallback(async () => {
+  //   if (isLoadingRef.current) return;
+  //   if (!mountedRef.current) return;
+
+  //   try {
+  //     isLoadingRef.current = true;
+  //     setIsLoading(true);
+
+  //     const response = await api.getMe() as ApiResponse<MeResponse>;
+
+  //     if (response.success && response.data?.user) {
+  //       setUser(response.data.user);
+  //       setDevices(response.data.devices || []);
+  //       setSessions(response.data.activeSessions || []);
+  //       setIsAuthenticated(true);
+        
+  //       // ✅ Only redirect from auth pages if email is verified
+  //       // Allow unverified users to stay on verification pending page
+  //       if (authRoutes.includes(pathname) && response.data.user.emailVerified) {
+  //         router.replace('/');
+  //       }
+        
+  //       // ✅ If user is on verification pending page but email is now verified, redirect to home
+  //       if (pathname === '/verify-email-pending' && response.data.user.emailVerified) {
+  //         router.replace('/');
+  //       }
+  //     } else {
+  //       setUser(null);
+  //       setIsAuthenticated(false);
+  //       setDevices([]);
+  //       setSessions([]);
+        
+  //       // Redirect to login if trying to access protected route (excluding verification pending)
+  //       if (!publicRoutes.includes(pathname) && pathname !== '/') {
+  //         router.replace('/login');
+  //       }
+  //     }
+  //   } catch (error: unknown) {
+  //     console.error('Failed to load user:', error);
+  //     setUser(null);
+  //     setIsAuthenticated(false);
+      
+  //     if (!publicRoutes.includes(pathname) && pathname !== '/') {
+  //       router.replace('/login');
+  //     }
+  //   } finally {
+  //     isLoadingRef.current = false;
+  //     setIsLoading(false);
+  //   }
+  // }, [pathname, router]);
+
   const loadUser = useCallback(async () => {
     if (isLoadingRef.current) return;
     if (!mountedRef.current) return;
@@ -123,7 +175,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSessions(response.data.activeSessions || []);
         setIsAuthenticated(true);
         
-        // Redirect authenticated users away from auth pages
+        // ✅ Check if user is on verify-email-pending page but email is verified
+        if (pathname === '/verify-email-pending' && response.data.user.emailVerified) {
+          router.replace('/');
+          return;
+        }
+        
+        // ✅ Redirect authenticated users away from auth pages
+        // BUT allow them to stay on verify-email-pending if email not verified
         if (authRoutes.includes(pathname)) {
           router.replace('/');
         }
@@ -133,8 +192,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setDevices([]);
         setSessions([]);
         
-        // Redirect to login if trying to access protected route
-        if (!publicRoutes.includes(pathname) && pathname !== '/') {
+        // ✅ Don't redirect from verify-email-pending if we have a pending email
+        const hasPendingEmail = sessionStorage.getItem('pendingVerificationEmail');
+        if (!publicRoutes.includes(pathname) && pathname !== '/' && pathname !== '/verify-email-pending') {
           router.replace('/login');
         }
       }
@@ -143,8 +203,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setIsAuthenticated(false);
       
-      // Redirect to login if trying to access protected route
-      if (!publicRoutes.includes(pathname) && pathname !== '/') {
+      // ✅ Don't redirect from verify-email-pending
+      if (!publicRoutes.includes(pathname) && pathname !== '/' && pathname !== '/verify-email-pending') {
         router.replace('/login');
       }
     } finally {
@@ -152,6 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }
   }, [pathname, router]);
+
 
   // Load user data on initial mount only
   useEffect(() => {
@@ -177,8 +238,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('🔐 Login Response:', response); // ADD THIS
 
       if (response.success && response.data) {
-        console.log('✅ User data:', response.data.user);
-        console.log('📧 Email verified:', response.data.user.emailVerified);
         
         setUser(response.data.user);
         setIsAuthenticated(true);
@@ -212,6 +271,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.success) {
         // Store email for verification resend
         sessionStorage.setItem('pendingVerificationEmail', data.email);
+
+        // ✅ Clear any existing auth state
+        setUser(null);
+        setIsAuthenticated(false);
         
         // Redirect to verification pending page
         router.replace('/verify-email-pending');
@@ -233,12 +296,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await api.verifyEmail(token) as ApiResponse;
 
       if (response.success) {
-        // Update user state
+        // ✅ Clear pending email from session storage
+        sessionStorage.removeItem('pendingVerificationEmail');
+        
+        // ✅ Update user state if they were somehow logged in
         if (user) {
           setUser({ ...user, emailVerified: true });
         }
         
-        // Redirect to login with success message
+        // ✅ Don't auto-login, just redirect to login page with success message
         router.replace('/login?verified=true');
       } else {
         throw new Error(response.message || 'Verification failed');

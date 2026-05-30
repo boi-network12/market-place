@@ -15,6 +15,13 @@ class ApiService {
     this.baseURL = baseURL;
   }
 
+  public async call<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    return this.request<T>(endpoint, options);
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}

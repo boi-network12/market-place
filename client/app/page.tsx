@@ -4,8 +4,17 @@ import HeroSection from "@/components/home/HeroSection";
 import CategoryGrid from "@/components/home/CategoryGrid";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import Footer from "@/components/home/Footer";
+import { useAuth } from "@/contexts/AuthContext";
+import PageLoader from "@/components/ui/PageLoader";
 
 export default function Home() {
+  const { user, isLoading } = useAuth();
+
+  // Show loader while auth is being determined
+  if (isLoading) {
+    return <PageLoader  />; // or a skeleton layout
+  }
+
   return (
     <div className="min-h-screen">
       <HeroSection />

@@ -8,6 +8,7 @@ import { logger } from '../utils/logger';
 import { AuthService } from '../services/auth.service';
 import { AppError } from '../middlewares/error.middleware';
 import { EmailService } from '../services/email.service';
+import { NotificationService } from '../services/notification.service';
 
 export class AuthController {
   // ====================== REGISTER ======================
@@ -85,6 +86,18 @@ export class AuthController {
         verificationLink,
       }).catch(err => logger.error('Verification email failed:', err));
 
+      // ✅ ADD NOTIFICATION: Welcome notification
+      await NotificationService.createNotification({
+        userId: user._id,
+        type: 'account',
+        title: 'Welcome to Our Platform! 🎉',
+        message: `Hi ${user.fullName}! Thanks for joining us. Please verify your email to get started.`,
+        priority: 'high',
+        actionUrl: '/verify-email',
+        actionLabel: 'Verify Email',
+        data: { registrationDate: new Date() }
+      }).catch(err => logger.error('Welcome notification failed:', err));
+
       logger.info(`New user registered: ${user.email} (unverified)`);
 
 
@@ -134,6 +147,8 @@ export class AuthController {
 
       // Update or add device
       const existingDevice = user.devices.find(d => d.deviceId === deviceInfo.deviceId);
+
+      const isNewDevice = !existingDevice;
 
       if (existingDevice) {
         existingDevice.lastLogin = new Date();
@@ -233,6 +248,25 @@ export class AuthController {
         sameSite: 'strict',
         maxAge: (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000,
       });
+
+      // ✅ ADD NOTIFICATION: New login notification
+      await NotificationService.createNotification({
+        userId: user._id,
+        type: 'security',
+        title: isNewDevice ? 'New Device Login Detected' : 'Successful Login',
+        message: isNewDevice 
+          ? `New login from ${deviceInfo.deviceName} in ${location.city}, ${location.country}. If this wasn't you, please secure your account.`
+          : `You logged in from ${deviceInfo.deviceName} in ${location.city}, ${location.country}`,
+        priority: isNewDevice ? 'high' : 'low',
+        actionUrl: '/security/devices',
+        actionLabel: 'View Devices',
+        data: { 
+          device: deviceInfo.deviceName,
+          location: `${location.city}, ${location.country}`,
+          isNewDevice,
+          timestamp: new Date()
+        }
+      }).catch(err => logger.error('Login notification failed:', err));
 
       // Send login alert (non-blocking)
       EmailService.sendLoginAlert(user.email, {
@@ -376,6 +410,18 @@ export class AuthController {
       // Invalidate all sessions for security
       await Session.deleteMany({ userId: user._id });
 
+      // ✅ ADD NOTIFICATION: Password changed
+      await NotificationService.createNotification({
+        userId: user._id,
+        type: 'security',
+        title: 'Password Changed Successfully 🔒',
+        message: 'Your password has been changed. If you did not perform this action, please contact support immediately.',
+        priority: 'high',
+        actionUrl: '/security',
+        actionLabel: 'Review Security',
+        data: { changeTime: new Date() }
+      }).catch(err => logger.error('Password change notification failed:', err));
+
       logger.info(`Password reset successful for user: ${user.email}`);
 
       res.json({
@@ -413,6 +459,18 @@ export class AuthController {
 
       user.emailVerified = true;
       await user.save();
+
+      // ✅ ADD NOTIFICATION: Email verified
+      await NotificationService.createNotification({
+        userId: user._id,
+        type: 'account',
+        title: 'Email Verified! ✅',
+        message: 'Your email has been successfully verified. You can now access all features.',
+        priority: 'high',
+        actionUrl: '/',
+        actionLabel: 'Go to Dashboard',
+        data: { verificationTime: new Date() }
+      }).catch(err => logger.error('Verification notification failed:', err));
 
        logger.info(`Email verified for user: ${user.email}`);
 
@@ -555,6 +613,18 @@ export class AuthController {
       user.isSeller = true;
       user.sellerApproved = false; // Requires admin approval
       await user.save();
+
+      // ✅ ADD NOTIFICATION: Seller request submitted
+      await NotificationService.createNotification({
+        userId: user._id,
+        type: 'account',
+        title: 'Seller Request Submitted 📝',
+        message: 'Your request to become a seller has been submitted. We will notify you once approved.',
+        priority: 'medium',
+        actionUrl: '/seller/dashboard',
+        actionLabel: 'View Status',
+        data: { requestDate: new Date(), status: 'pending' }
+      }).catch(err => logger.error('Seller request notification failed:', err));
       
       // Notify admin
       // EmailService.notifyAdminNewSeller(user.email);

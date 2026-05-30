@@ -1,11 +1,13 @@
 // routes/index.ts
 import { Router } from 'express';
 import authRoutes from './auth.routes';
+import notificationRoutes from './notification.routes';
 
 const router = Router();
 
 // API version
 router.use('/auth', authRoutes);
+router.use('/notifications', notificationRoutes);
 // router.use('/users', userRoutes);
 // router.use('/products', productRoutes);
 // router.use('/orders', orderRoutes);
@@ -18,6 +20,7 @@ router.get('/', (req, res) => {
     version: '2.0.0',
     endpoints: {
       auth: '/api/auth',
+      notifications: '/api/notifications',
       users: '/api/users',
       products: '/api/products',
       orders: '/api/orders',

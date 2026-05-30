@@ -207,18 +207,12 @@ export class AuthController {
       // Generate tokens
       const { accessToken, refreshToken } = AuthService.generateTokens(user, rememberMe ? '30d' : '7d');
 
-      // Cookie configuration
-        const isProduction = process.env.NODE_ENV === 'production';
-        const frontendDomain = process.env.FRONTEND_URL?.replace('https://', '').replace('http://', '');
-
-        // For Vercel deployments, don't set domain (defaults to current domain)
-        const cookieDomain = !isProduction && frontendDomain ? frontendDomain : undefined;
-
       // Invalidate old sessions for same device
       await Session.updateMany(
         { userId: user._id, deviceId: deviceInfo.deviceId, isActive: true },
         { isActive: false }
       );
+
 
       const session = new Session({
         userId: user._id,
@@ -243,25 +237,39 @@ export class AuthController {
 
       await session.save();
 
-      // Set cookies
-      res.cookie('token', accessToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? 'none' : 'lax', // 'none' required for cross-site requests
-            maxAge: (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000,
-            domain: cookieDomain,
-            path: '/',
-        });
+      // =========== FIXED COOKIE CONFIGURATION FOR IOS ===========
+      const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
+      // Cookie configuration
+      const isProduction = process.env.NODE_ENV === 'production';
+      
 
-        // Set refresh token cookie
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? 'none' : 'lax',
-            maxAge: 30 * 24 * 60 * 60 * 1000,
-            domain: cookieDomain,
-            path: '/',
-        });
+       // For other devices: Use none + secure + domain for cross-subdomain
+      let cookieSettings: {
+          httpOnly: boolean;
+          secure: boolean;
+          sameSite: 'none' | 'lax' | 'strict';
+          path: string;
+          maxAge: number;
+        } = {
+        httpOnly: true,
+        secure: true, 
+        sameSite: 'none' as const,
+        path: '/',
+        maxAge: (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000,
+      };
+
+      // For localhost development, secure can be false only if sameSite is not 'none'
+      if (!isProduction && process.env.NODE_ENV === 'development') {
+        // For localhost:3000 (frontend) and localhost:3001 (backend)
+        cookieSettings.secure = false;
+        cookieSettings.sameSite = 'lax';
+      }
+
+      res.cookie('token', accessToken, cookieSettings);
+      res.cookie('refreshToken', refreshToken, {
+        ...cookieSettings,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
 
       // ✅ ADD NOTIFICATION: New login notification
       await NotificationService.createNotification({
@@ -303,7 +311,7 @@ export class AuthController {
             sellerApproved: user.sellerApproved,
             emailVerified: user.emailVerified,
           },
-          accessToken,
+          accessToken
         },
       });
 
@@ -348,21 +356,32 @@ export class AuthController {
 
       const isProduction = process.env.NODE_ENV === 'production';
 
-      res.cookie('token', accessToken, {
+      // Same cookie settings as login
+      const cookieSettings: {
+          httpOnly: boolean;
+          secure: boolean;
+          sameSite: 'none' | 'lax' | 'strict';
+          path: string;
+          maxAge: number;
+        } = {
         httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
+        secure: true,
+        sameSite: 'none' as const,
         maxAge: 7 * 24 * 60 * 60 * 1000,
         path: '/'
-      });
+      };
+
+      if (!isProduction && process.env.NODE_ENV === 'development') {
+        cookieSettings.secure = false;
+        cookieSettings.sameSite = 'lax';
+      }
+
+      res.cookie('token', accessToken, cookieSettings);
 
       if (newRefreshToken) {
-        res.cookie('refreshToken', newRefreshToken, {
-          httpOnly: true,
-          secure: isProduction,
-          sameSite: isProduction ? 'none' : 'lax',
+      res.cookie('refreshToken', newRefreshToken, {
+          ...cookieSettings,
           maxAge: 30 * 24 * 60 * 60 * 1000,
-          path: '/'
         });
       }
 

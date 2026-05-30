@@ -54,6 +54,7 @@ interface LoginResponse {
   user: User;
   device?: Device;
   location?: { city: string };
+  accessToken?: string; // 
 }
 
 interface MeResponse {
@@ -227,7 +228,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mountedRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array - only run once on mount
+  }, []); 
+  
+  const isIOS = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+};
 
   // In AuthContext.tsx - login function
   const login = async (email: string, password: string, rememberMe = false, redirectTo?: string) => {
@@ -241,6 +247,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         setUser(response.data.user);
         setIsAuthenticated(true);
+
+        // For iOS, store token in localStorage if provided
+        if (isIOS() && response.data.accessToken) {
+          localStorage.setItem('accessToken', response.data.accessToken);
+        }
 
         // DON'T redirect immediately - wait for cookie to be set
         setTimeout(() => {

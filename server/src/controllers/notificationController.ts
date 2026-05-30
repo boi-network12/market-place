@@ -1,8 +1,8 @@
 // controllers/notification.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import { NotificationService } from '../services/notification.service';
-import { NotificationPreferenceService } from '../services/notification-preference.service';
-import { AppError } from '../middlewares/error.middleware';
+import { NotificationService } from '../services/notificationService';
+import { NotificationPreferenceService } from '../services/notification-preferenceService';
+import { AppError } from '../middlewares/errorMiddleware';
 import { logger } from '../utils/logger';
 
 export class NotificationController {

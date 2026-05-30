@@ -1,9 +1,9 @@
 // routes/auth.routes.ts
 import { Router } from 'express';
-import { AuthController } from '../controllers/auth.controller';
+import { AuthController } from '../controllers/authController';
 import { body } from 'express-validator';
-import { authMiddleware } from '../middlewares/auth.middleware';
-import { validate } from '../middlewares/validation.middleware';
+import { authMiddleware } from '../middlewares/authMiddleware';
+import { validate } from '../middlewares/validationMiddleware';
 
 
 const router = Router();

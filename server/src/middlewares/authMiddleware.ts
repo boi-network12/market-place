@@ -1,8 +1,8 @@
 // middleware/auth.middleware.ts
 import { Request, Response, NextFunction } from 'express';
-import { AuthService } from '../services/auth.service';
-import { Session } from '../models/Session.model';
-import { AppError } from './error.middleware';
+import { AuthService } from '../services/authService';
+import { Session } from '../models/SessionModel';
+import { AppError } from './errorMiddleware';
 
 declare global {
   namespace Express {

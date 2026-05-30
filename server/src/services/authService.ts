@@ -1,6 +1,6 @@
 // services/auth.service.ts
 import jwt from 'jsonwebtoken';
-import { IUser } from '../models/User.model';
+import { IUser } from '../models/UserModel';
 
 export class AuthService {
   static generateTokens(user: IUser, expiry: string = '7d') {

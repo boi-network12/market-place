@@ -1,6 +1,6 @@
 // scripts/create-admin.ts
 import mongoose from 'mongoose';
-import { User } from '../models/User.model';
+import { User } from '../models/UserModel';
 import dotenv from 'dotenv';
 
 dotenv.config();

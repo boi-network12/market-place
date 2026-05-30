@@ -1,9 +1,9 @@
 // routes/notification.routes.ts
 import { Router } from 'express';
-import { NotificationController } from '../controllers/notification.controller';
-import { authMiddleware } from '../middlewares/auth.middleware';
+import { NotificationController } from '../controllers/notificationController';
+import { authMiddleware } from '../middlewares/authMiddleware';
 import { body } from 'express-validator';
-import { validate } from '../middlewares/validation.middleware';
+import { validate } from '../middlewares/validationMiddleware';
 
 const router = Router();
 

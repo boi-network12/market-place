@@ -1,14 +1,14 @@
 // controllers/auth.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import { User, IUser } from '../models/User.model';
-import { Session } from '../models/Session.model';
-import { LocationService } from '../services/location.service';
-import { DeviceService, DeviceInfo } from '../services/device.service';
+import { User, IUser } from '../models/UserModel';
+import { Session } from '../models/SessionModel';
+import { LocationService } from '../services/locationService';
+import { DeviceService, DeviceInfo } from '../services/deviceService';
 import { logger } from '../utils/logger';
-import { AuthService } from '../services/auth.service';
-import { AppError } from '../middlewares/error.middleware';
-import { EmailService } from '../services/email.service';
-import { NotificationService } from '../services/notification.service';
+import { AuthService } from '../services/authService';
+import { AppError } from '../middlewares/errorMiddleware';
+import { EmailService } from '../services/emailService';
+import { NotificationService } from '../services/notificationService';
 
 export class AuthController {
   // ====================== REGISTER ======================

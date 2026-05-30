@@ -1,5 +1,5 @@
 // services/notification-preference.service.ts
-import { NotificationPreference, INotificationPreference } from '../models/NotificationPreference.model';
+import { NotificationPreference, INotificationPreference } from '../models/NotificationPreferenceModel';
 import { Types } from 'mongoose';
 import { logger } from '../utils/logger';
 

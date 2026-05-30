@@ -1,7 +1,7 @@
 // middleware/validation.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 import { validationResult, ValidationError } from 'express-validator';
-import { AppError } from './error.middleware';
+import { AppError } from './errorMiddleware';
 
 /**
  * Middleware to validate request using express-validator

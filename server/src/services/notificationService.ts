@@ -1,7 +1,7 @@
 // services/notification.service.ts
-import { Notification, INotification } from '../models/Notification.model';
-import { NotificationPreference } from '../models/NotificationPreference.model';
-import { EmailService } from './email.service';
+import { Notification, INotification } from '../models/NotificationModel';
+import { NotificationPreference } from '../models/NotificationPreferenceModel';
+import { EmailService } from './emailService';
 import { logger } from '../utils/logger';
 import { Types } from 'mongoose';
 

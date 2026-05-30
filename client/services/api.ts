@@ -402,10 +402,64 @@ private async refreshToken(): Promise<boolean> {
     });
   }
 
+  async getProfile() {
+    return this.request('/profile');
+  }
+
+
   async resetPassword(email: string, code: string, newPassword: string) {
     return this.request('/auth/reset-password', {
       method: 'POST',
       body: JSON.stringify({ email, code, newPassword }),
+    });
+  }
+
+  async updateProfile(data: unknown) {
+  return this.request('/profile', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+async uploadAvatar(file: File): Promise<{ success: boolean; message?: string; data?: unknown }> {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    
+    // Use fetch directly for FormData to avoid Content-Type header issues
+    const isIOS = this.isIOSDevice();
+    const url = `${this.baseURL}/profile/avatar`;
+    
+    const headers: HeadersInit = {};
+    if (isIOS && this.accessToken) {
+      headers['Authorization'] = `Bearer ${this.accessToken}`;
+    }
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers,
+      body: formData,
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to upload avatar');
+    }
+    
+    return data;
+  }
+
+async deleteAvatar(): Promise<{ success: boolean; message?: string }> {
+    return this.request('/profile/avatar', {
+      method: 'DELETE',
+    });
+  }
+
+  async changePassword(currentPassword: string, newPassword: string) {
+    return this.request('/profile/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
     });
   }
 

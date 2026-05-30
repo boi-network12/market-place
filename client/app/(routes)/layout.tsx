@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import PageLoader from '@/components/ui/PageLoader';
+import { ProfileProvider } from '@/contexts/ProfileContext';
 
 interface RoutesLayoutProps {
   children: ReactNode;
@@ -51,5 +52,9 @@ export default function RoutesLayout({ children }: RoutesLayoutProps) {
     return null;
   }
 
-  return <>{children}</>;
+  return (
+    <ProfileProvider>
+      {children}
+    </ProfileProvider>
+  );
 }

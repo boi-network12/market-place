@@ -6,17 +6,17 @@ import AnimatedLogo from "./AnimatedLogo";
 
 export default function PageLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-950">
+    <div className="min-h-screen flex items-center justify-center bg-white/10 dark:bg-gray-950/10">
       <div className="text-center">
         {/* Animated Logo */}
-        <motion.div
+        {/* <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
           <AnimatedLogo />
-        </motion.div>
+        </motion.div> */}
 
         {/* Loading Spinner */}
         <motion.div

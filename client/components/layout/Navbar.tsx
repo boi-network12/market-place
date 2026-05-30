@@ -184,20 +184,6 @@ export default function Navbar() {
                           </span>
                         </button>
 
-                        {/* Invites */}
-                        <button
-                          onClick={() => {
-                            setIsProfileOpen(false);
-                            router.push("/invites");
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <Mail className="h-5 w-5 text-gray-400" />
-                          <span>Invites</span>
-                          <span className="ml-auto bg-indigo-500 text-white text-xs px-2 py-0.5 rounded-full">
-                            2
-                          </span>
-                        </button>
 
                         {/* FAQ */}
                         <Link

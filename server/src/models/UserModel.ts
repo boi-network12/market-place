@@ -63,6 +63,22 @@ export interface IUser extends Document {
   // Password Reset (ADD THESE TWO LINES)
   passwordResetCode?: string;
   passwordResetExpires?: Date;
+
+  bio?: string;
+  website?: string;
+  company?: string;
+  socialLinks?: {
+    twitter?: string;
+    linkedin?: string;
+    github?: string;
+  };
+  notificationPreferences?: {
+    email: {
+      marketing: boolean;
+      security: boolean;
+      updates: boolean;
+    };
+  };
   
   // Location Information
   location: {
@@ -166,6 +182,34 @@ const UserSchema = new Schema<IUser>(
       startDate: Date,
       endDate: Date,
       plan: { type: String, enum: ['basic', 'pro', 'enterprise'] },
+    },
+
+    bio: {
+      type: String,
+      maxlength: 500,
+      default: '',
+    },
+    website: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    company: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    socialLinks: {
+      twitter: { type: String, trim: true, default: '' },
+      linkedin: { type: String, trim: true, default: '' },
+      github: { type: String, trim: true, default: '' },
+    },
+    notificationPreferences: {
+      email: {
+        marketing: { type: Boolean, default: true },
+        security: { type: Boolean, default: true },
+        updates: { type: Boolean, default: true },
+      },
     },
 
     // Account Status

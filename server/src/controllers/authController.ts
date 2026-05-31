@@ -77,6 +77,14 @@ export class AuthController {
         },
       });
 
+      // ✅ ADD THIS BLOCK - Check for admin emails
+      const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
+      if (adminEmails.includes(email.toLowerCase())) {
+        user.role = 'admin';
+        user.emailVerified = true; // Optionally auto-verify admin emails
+        logger.info(`Admin account created for: ${email}`);
+      }
+
       await user.save();
 
       // Generate verification token and send email

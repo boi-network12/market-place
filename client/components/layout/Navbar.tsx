@@ -4,7 +4,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { ShoppingCart, User, Bell, Mail, HelpCircle, LogOut, Settings, ChevronDown, UserCircle } from "lucide-react";
+import { ShoppingCart, User, Bell, Mail, HelpCircle, LogOut, Settings, ChevronDown, UserCircle, LayoutDashboard } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import AnimatedLogo from "../ui/AnimatedLogo";
@@ -160,14 +160,16 @@ export default function Navbar() {
                         </Link>
 
                         {/* Settings Link */}
-                        <Link
-                          href="/settings"
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                          onClick={() => setIsProfileOpen(false)}
-                        >
-                          <Settings className="h-5 w-5 text-gray-400" />
-                          <span>Settings</span>
-                        </Link>
+                        {user && user?.role === "admin" && (
+                          <Link
+                            href="/admin-dashboard"
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            onClick={() => setIsProfileOpen(false)}
+                          >
+                            <LayoutDashboard className="h-5 w-5 text-gray-400" />
+                            <span>Admin Dashboard</span>
+                          </Link>
+                          )}
 
                         {/* Notifications */}
                         <button

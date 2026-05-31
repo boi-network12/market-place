@@ -63,7 +63,7 @@ interface SearchUserResult {
 
 // ============ Navigation Data ============
 const navigation: NavItem[] = [
-  { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Sellers', href: '/admin/sellers', icon: FolderKanban },
   { name: 'Products', href: '/admin/products', icon: Package },

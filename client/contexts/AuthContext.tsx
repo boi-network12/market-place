@@ -6,30 +6,132 @@ import { api } from '@/services/api';
 
 // ==================== TYPES ====================
 
-interface User {
-  id: string;
+export interface User {
+  // Core Identification
+  _id: string;
   username: string;
   email: string;
   fullName: string;
+  
+  // Roles & Permissions
   role: 'user' | 'seller' | 'admin' | 'super_admin';
   isSeller: boolean;
   sellerApproved: boolean;
+  
+  // Verification & Status
   emailVerified: boolean;
+  status: 'active' | 'suspended' | 'banned';
+  isAnonymous?: boolean;
+  
+  // Contact Information
+  phoneNumber?: string;
   avatar?: string;
+  
+  // Timestamps
   createdAt: string;
+  updatedAt?: string;
+  lastLogin?: string;
+  
+  // Seller Subscription (if applicable)
+  sellerSubscription?: {
+    active: boolean;
+    startDate: string;
+    endDate: string;
+    plan: 'basic' | 'pro' | 'enterprise';
+  };
+  
+  // Profile Details
+  bio?: string;
+  website?: string;
+  company?: string;
+  socialLinks?: {
+    twitter?: string;
+    linkedin?: string;
+    github?: string;
+  };
+  
+  // Location Information
+  location?: {
+    country: string;
+    city: string;
+    ipAddress?: string;
+    coordinates?: { lat: number; lng: number };
+    registeredAt?: string;
+  };
+  
+  // Device Management
+  devices?: Array<{
+    deviceId: string;
+    deviceName: string;
+    deviceType: 'mobile' | 'tablet' | 'desktop' | 'bot' | 'other';
+    browser: string;
+    os: string;
+    ipAddress?: string;
+    location?: {
+      country: string;
+      city: string;
+      lat: number;
+      lng: number;
+      timezone: string;
+    };
+    lastLogin: string;
+    isActive: boolean;
+    _id?: string;
+  }>;
+  
+  // Login History
+  loginHistory?: Array<{
+    ip: string;
+    device: string;
+    location: string;
+    timestamp: string;
+    _id?: string;
+  }>;
+  
+  // Last Login Location
+  lastLoginLocation?: {
+    ip: string;
+    device: string;
+    location: string;
+    timestamp: string;
+  };
+  
+  // User Preferences
+  notificationPreferences?: {
+    email: {
+      marketing: boolean;
+      security: boolean;
+      updates: boolean;
+    };
+  };
+  emailNotifications?: boolean;
+  
+  // Security Settings
+  twoFactorEnabled?: boolean;
 }
 
-interface Device {
+// Device interface (if needed separately)
+export interface Device {
+  _id?: string;
   deviceId: string;
   deviceName: string;
-  deviceType: string;
+  deviceType: 'mobile' | 'tablet' | 'desktop' | 'bot' | 'other';
   browser: string;
   os: string;
-  lastLogin: Date;
+  ipAddress?: string;
+  location?: {
+    country: string;
+    city: string;
+    lat: number;
+    lng: number;
+    timezone: string;
+  };
+  lastLogin: Date | string;
   isActive: boolean;
 }
 
-interface Session {
+// Session interface
+export interface Session {
   deviceInfo: {
     name: string;
     type: string;
@@ -70,6 +172,22 @@ interface RegisterData {
   phoneNumber?: string;
 }
 
+interface SellerRequestData {
+  businessName: string;
+  businessAddress: string;
+  proofOfAddress: string;
+  phoneNumber: string;
+  email: string;
+  transactionMethods: {
+    bank?: { accountName: string; accountNumber: string; bankName: string };
+    crypto?: { walletAddress: string; currency: string };
+    cashApp?: { username: string };
+    paypal?: { email: string };
+  };
+  documents?: Array<{ type: string; url: string }>;
+}
+
+
 interface AuthContextType {
   user: User | null;
   devices: Device[];
@@ -89,6 +207,7 @@ interface AuthContextType {
   verifyResetCode: (email: string, code: string) => Promise<void>;
   resetPassword: (email: string, code: string, newPassword: string) => Promise<void>;
   resendResetCode: (email: string) => Promise<void>;
+  requestToBecomeSeller: (data: SellerRequestData) => Promise<ApiResponse<unknown>>;
 }
 
 // ==================== CONTEXT ====================
@@ -475,6 +594,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const requestToBecomeSeller = async (data: SellerRequestData) => {
+  try {
+      setIsLoading(true);
+      const response = await api.requestToBecomeSeller(data) as ApiResponse;
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to submit seller application');
+      }
+      
+      return response;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to submit seller application';
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const isEmailVerified = user?.emailVerified || false;
 
   const value: AuthContextType = {
@@ -496,6 +633,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     verifyResetCode,
     resetPassword,
     resendResetCode,
+    requestToBecomeSeller,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -3,7 +3,7 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface INotification extends Document {
   userId: Types.ObjectId;
-  type: 'system' | 'security' | 'order' | 'payment' | 'product' | 'seller' | 'message' | 'account';
+  type: 'system' | 'security' | 'order' | 'payment' | 'product' | 'seller' | 'message' | 'account' | 'announcement';
   title: string;
   message: string;
   data?: Map<string, any>;
@@ -27,7 +27,7 @@ const NotificationSchema = new Schema<INotification>(
     },
     type: {
       type: String,
-      enum: ['system', 'security', 'order', 'payment', 'product', 'seller', 'message', 'account' ],
+      enum: ['system', 'security', 'order', 'payment', 'product', 'seller', 'message', 'account', 'announcement'],
       required: true,
     },
     title: {

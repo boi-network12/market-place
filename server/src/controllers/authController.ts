@@ -10,6 +10,7 @@ import { AppError } from '../middlewares/errorMiddleware';
 import { EmailService } from '../services/emailService';
 import { NotificationService } from '../services/notificationService';
 import { PasswordResetService } from '../services/passwordResetService';
+import { SellerRequest } from '../models/SellerRequestModel';
 
 const yeyeDomain = ".kamdimarket-place.vercel.app";
 
@@ -676,6 +677,66 @@ export class AuthController {
       res.json({
         success: true,
         message: 'Seller request submitted. Awaiting admin approval.',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async requestToBecomeSeller(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.userId;
+      const {
+        businessName,
+        businessAddress,
+        proofOfAddress,
+        phoneNumber,
+        email,
+        transactionMethods,
+        documents,
+      } = req.body;
+
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new AppError('User not found', 404);
+      }
+
+      if (user.isSeller) {
+        throw new AppError('Already a seller', 400);
+      }
+
+      // Check for existing pending request
+      const existingRequest = await SellerRequest.findOne({ userId, status: 'pending' });
+      if (existingRequest) {
+        throw new AppError('You already have a pending seller request', 400);
+      }
+
+      // Create seller request
+      const sellerRequest = new SellerRequest({
+        userId,
+        data: {
+          businessName,
+          businessAddress,
+          proofOfAddress,
+          phoneNumber: phoneNumber || user.phoneNumber,
+          email: email || user.email,
+          transactionMethods,
+          documents: documents || [],
+        },
+        status: 'pending',
+      });
+
+      await sellerRequest.save();
+
+      // Notify admins (you can implement this)
+      // await NotificationService.notifyAdminsOfSellerRequest(user);
+
+      logger.info(`Seller request submitted by user ${userId}`);
+
+      res.json({
+        success: true,
+        message: 'Seller application submitted successfully. We will review your application and notify you.',
+        data: { requestId: sellerRequest._id },
       });
     } catch (error) {
       next(error);

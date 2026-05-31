@@ -28,6 +28,7 @@ router.post('/login', validate(loginValidation), AuthController.login);
 router.post('/logout', authMiddleware, AuthController.logout);
 router.get('/me', authMiddleware, AuthController.getMe);
 router.post('/become-seller', authMiddleware, AuthController.becomeSeller);
+router.post('/become-seller-request', authMiddleware, AuthController.requestToBecomeSeller);
 router.post('/refresh-token', AuthController.refreshToken);
 router.post('/resend-verification', AuthController.resendVerificationEmail);
 router.post('/forgot-password', AuthController.forgotPassword);

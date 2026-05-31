@@ -44,6 +44,7 @@ export interface INotificationPreference extends Document {
       seller: boolean;
       message: boolean;
       account: boolean;
+      announcement: boolean;
     };
   };
   quietHours: {

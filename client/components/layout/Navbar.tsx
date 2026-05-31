@@ -6,18 +6,23 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ShoppingCart, User, Bell, Mail, HelpCircle, LogOut, Settings, ChevronDown, UserCircle, LayoutDashboard } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import AnimatedLogo from "../ui/AnimatedLogo";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { shouldHideNavbar } from "@/lib/navbar-exclusions";
 
 export default function Navbar() {
   const { theme, toggleTheme, mounted } = useTheme();
   const { unreadCount } = useNotifications();
   const { user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(3); // This would come from your cart context/store
+  const [cartCount, setCartCount] = useState(3); 
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Check if navbar should be hidden on current page
+  const hideNavbar = shouldHideNavbar(pathname || '');
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -50,7 +55,7 @@ export default function Navbar() {
   };
 
   // Prevent hydration mismatch
-  if (!mounted) return null;
+  if (!mounted || hideNavbar) return null;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md">

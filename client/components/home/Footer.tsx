@@ -62,7 +62,6 @@ export default function Footer() {
       // You can set a local error state instead
       return;
     }
-    
 
     const result = await subscribe({
       email,

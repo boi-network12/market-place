@@ -4,6 +4,7 @@ import authRoutes from './authRoutes';
 import notificationRoutes from './notificationRoutes';
 import profileRoutes from './profileRoutes';
 import adminRoutes from './adminRoutes';
+import newsLetters from "./newsletterRoutes";
 
 const router = Router();
 
@@ -12,6 +13,7 @@ router.use('/auth', authRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/profile', profileRoutes); 
 router.use('/admin', adminRoutes);
+router.use("/newsletter", newsLetters);
 
 // Root API info
 router.get('/', (req, res) => {

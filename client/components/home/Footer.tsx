@@ -1,7 +1,7 @@
 // components/home/Footer.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
@@ -18,6 +18,7 @@ import {
 import Link from "next/link";
 import { BiLink, BiLogoGithub, BiLogoLinkedin, BiLogoTwitter } from "react-icons/bi";
 import TerminalLogo from "../ui/TerminalLogo";
+import { useNewsletter } from "@/contexts/NewsletterContext";
 
 declare global {
   interface Window {
@@ -27,10 +28,12 @@ declare global {
 
 export default function Footer() {
   const [email, setEmail] = useState("");
+  const { subscribe, subscriptionStatus, subscriptionMessage, clearSubscriptionStatus } = useNewsletter();
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const currentYear = new Date().getFullYear();
+
 
   const interests = [
     "Cybersecurity",
@@ -41,51 +44,42 @@ export default function Footer() {
     "Threat Intelligence",
   ];
 
+  // Auto-clear status after 5 seconds
+  useEffect(() => {
+    if (subscriptionStatus !== 'idle') {
+      const timer = setTimeout(() => {
+        clearSubscriptionStatus();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [subscriptionStatus, clearSubscriptionStatus]);
+
+
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email.match(/^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$/)) {
-      setStatus("error");
-      setMessage("Please enter a valid business email address");
-      setTimeout(() => setStatus("idle"), 3000);
+      // You can set a local error state instead
       return;
     }
 
-    setStatus("loading");
+    const result = await subscribe({
+      email,
+      interests: selectedInterests,
+      source: "footer_newsletter",
+    });
 
-    try {
-      const response = await fetch("/api/newsletter/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          interests: selectedInterests,
-          source: "footer_newsletter",
-          timestamp: new Date().toISOString(),
-        }),
-      });
+    if (result.success) {
+      setEmail("");
+      setSelectedInterests([]);
 
-      if (response.ok) {
-        setStatus("success");
-        setMessage("✓ Welcome to Kamdi Insider! Check your inbox for confirmation.");
-        setEmail("");
-        setSelectedInterests([]);
-
-        if (typeof window !== "undefined" && window.gtag) {
-          window.gtag("event", "newsletter_subscribe", {
-            event_category: "engagement",
-            event_label: email,
-            source: "footer",
-          });
-        }
-      } else {
-        throw new Error("Subscription failed");
+      if (typeof window !== "undefined" && window.gtag) {
+        window.gtag("event", "newsletter_subscribe", {
+          event_category: "engagement",
+          event_label: email,
+          source: "footer",
+        });
       }
-    } catch (error) {
-      setStatus("error");
-      setMessage("Unable to subscribe. Please try again later.");
-    } finally {
-      setTimeout(() => setStatus("idle"), 5000);
     }
   };
 
@@ -138,6 +132,10 @@ export default function Footer() {
     { name: "Portfolio", icon: BiLink, href: "https://kamdi-dev.click" }
   ];
 
+  const isLoading = subscriptionStatus === 'loading';
+  const isSuccess = subscriptionStatus === 'success';
+  const isError = subscriptionStatus === 'error';
+
   return (
     <footer className="relative bg-gray-900 dark:bg-gray-950 overflow-hidden">
       {/* Background gradient */}
@@ -178,14 +176,15 @@ export default function Footer() {
                     placeholder="name@company.com"
                     className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 <button
                   type="submit"
-                  disabled={status === "loading"}
+                  disabled={isLoading}
                   className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap"
                 >
-                  {status === "loading" ? (
+                  {isLoading ? (
                     <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>

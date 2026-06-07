@@ -263,4 +263,125 @@ export class EmailService {
       html,
     });
   }
+
+  /**
+   * Send Newsletter Welcome Email
+  */
+
+  static async sendNewsletterWelcome(email: string, data: { interests?: string[] }) {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #4f46e5;">Welcome to Kamdi Insider! 🎉</h1>
+        </div>
+        
+        <p>Thank you for subscribing to our newsletter!</p>
+        
+        ${data.interests && data.interests.length > 0 ? `
+          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0;"><strong>Your selected interests:</strong></p>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              ${data.interests.map(interest => `
+                <span style="background-color: #4f46e5; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">${interest}</span>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+        
+        <p>You'll now receive:</p>
+        <ul style="margin: 20px 0; padding-left: 20px;">
+          <li>📊 Exclusive threat intelligence reports</li>
+          <li>🔒 New product announcements and early access</li>
+          <li>🎓 Upcoming webinars and training sessions</li>
+          <li>🏆 Case studies from industry leaders</li>
+        </ul>
+        
+        <div style="background-color: #e0e7ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0;"><strong>Pro tip:</strong> Add newsletter@kamdimarket.com to your contacts to ensure you never miss an update!</p>
+        </div>
+        
+        <a href="${process.env.FRONTEND_URL}/newsletter/preferences?email=${encodeURIComponent(email)}" 
+          style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0;">
+          Manage Preferences
+        </a>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; font-size: 12px; color: #999;">
+          <p>You're receiving this because you subscribed to Kamdi Market's newsletter.</p>
+          <a href="${process.env.FRONTEND_URL}/unsubscribe?email=${encodeURIComponent(email)}" style="color: #4f46e5;">Unsubscribe</a>
+        </div>
+      </div>
+    `;
+    
+    return this.sendEmail({
+      to: email,
+      subject: 'Welcome to Kamdi Insider! 🎉',
+      html,
+    });
+  }
+
+  static async sendNewsletterWelcomeBack(email: string, data: { interests?: string[] }) {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #4f46e5;">Welcome Back! 👋</h1>
+        </div>
+        
+        <p>Great to have you back with Kamdi Insider!</p>
+        
+        <p>You've been resubscribed to our newsletter. You'll now continue receiving the latest security insights and product updates.</p>
+        
+        <a href="${process.env.FRONTEND_URL}/newsletter/preferences?email=${encodeURIComponent(email)}" 
+          style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0;">
+          Update Preferences
+        </a>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; font-size: 12px; color: #999;">
+          <a href="${process.env.FRONTEND_URL}/unsubscribe?email=${encodeURIComponent(email)}" style="color: #4f46e5;">Unsubscribe</a>
+        </div>
+      </div>
+    `;
+    
+    return this.sendEmail({
+      to: email,
+      subject: 'Welcome Back to Kamdi Insider! 👋',
+      html,
+    });
+  }
+
+  static async notifyAdminNewsletterSubscriber(subscriberEmail: string, interests: string[]) {
+    // Get admin emails from environment
+    const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim());
+    
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #4f46e5;">New Newsletter Subscriber! 📧</h2>
+        
+        <p><strong>Email:</strong> ${subscriberEmail}</p>
+        
+        ${interests.length > 0 ? `
+          <p><strong>Interests:</strong> ${interests.join(', ')}</p>
+        ` : ''}
+        
+        <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+        
+        <div style="margin-top: 20px; padding: 15px; background-color: #f3f4f6; border-radius: 8px;">
+          <a href="${process.env.FRONTEND_URL}/admin/newsletter" 
+            style="background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px;">
+            View All Subscribers
+          </a>
+        </div>
+      </div>
+    `;
+    
+    // Send to each admin
+    for (const adminEmail of adminEmails) {
+      if (adminEmail) {
+        await this.sendEmail({
+          to: adminEmail,
+          subject: `New Newsletter Subscriber: ${subscriberEmail}`,
+          html,
+        }).catch(err => logger.error(`Failed to notify admin ${adminEmail}:`, err));
+      }
+    }
+  }
 }

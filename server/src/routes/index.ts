@@ -5,6 +5,7 @@ import notificationRoutes from './notificationRoutes';
 import profileRoutes from './profileRoutes';
 import adminRoutes from './adminRoutes';
 import newsLetters from "./newsletterRoutes";
+import adminEmailRoutes from './adminEmailRoutes';
 
 const router = Router();
 
@@ -14,6 +15,7 @@ router.use('/notifications', notificationRoutes);
 router.use('/profile', profileRoutes); 
 router.use('/admin', adminRoutes);
 router.use("/newsletter", newsLetters);
+router.use("/admin/email", adminEmailRoutes);
 
 // Root API info
 router.get('/', (req, res) => {
@@ -25,6 +27,8 @@ router.get('/', (req, res) => {
       notifications: '/api/notifications',
       profile: '/api/profile',  
       admin: '/api/admin', 
+      newsLetters: '/api/newsletter',
+      email: '/api/admin/email',
     },
   });
 });

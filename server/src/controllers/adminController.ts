@@ -5,6 +5,10 @@ import { AppError } from '../middlewares/errorMiddleware';
 import { logger } from '../utils/logger';
 import { User } from '../models/UserModel';
 import { Types } from 'mongoose';
+import { SellerRequest } from '../models/SellerRequestModel';
+import { NewsletterSubscriber } from '../models/NewsletterSubscriberModel';
+import { EmailCampaign } from '../models/EmailCampaignModel';
+import { Announcement } from '../models/AdminTeamModel';
 
 // Extend Request type
 interface AdminRequest extends Request {
@@ -519,6 +523,55 @@ export class AdminController {
       res.json({
         success: true,
         data: stats,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getBadgeCounts(req: AdminRequest, res: Response, next: NextFunction) {
+    try {
+      // Get counts for different sections
+      const [
+        pendingSellerRequests,
+        totalSubscribers,
+        activeCampaigns,
+        pendingAnnouncements,
+        newUsersToday,
+        activeDisputes
+      ] = await Promise.all([
+        // Pending seller requests
+        SellerRequest.countDocuments({ status: 'pending' }),
+        
+        // Active newsletter subscribers (not unsubscribed)
+        NewsletterSubscriber.countDocuments({ unsubscribedAt: null }),
+        
+        // Active/draft email campaigns
+        EmailCampaign.countDocuments({ status: { $in: ['draft', 'scheduled'] } }),
+        
+        // Pending announcements (created but not sent)
+        Announcement.countDocuments({ sentAt: null, isActive: true }),
+        
+        // New users today
+        User.countDocuments({
+          createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) }
+        }),
+        
+        // Active disputes (if you have a dispute model)
+        // Dispute.countDocuments({ status: 'pending' })
+        0 // Placeholder
+      ]);
+      
+      res.json({
+        success: true,
+        data: {
+          sellerRequests: pendingSellerRequests,
+          emailSubscribers: totalSubscribers,
+          emailCampaigns: activeCampaigns,
+          announcements: pendingAnnouncements,
+          newUsers: newUsersToday,
+          disputes: activeDisputes
+        }
       });
     } catch (error) {
       next(error);

@@ -120,6 +120,12 @@ export interface EmailSubscriber {
   source: string;
   isVerified: boolean;
   verifiedAt?: string;
+  metadata?: {
+    ipAddress?: string;
+    userAgent?: string;
+    location?: string;
+  },
+  unsubscribedAt?: string;
   createdAt: string;
 }
 
@@ -222,6 +228,25 @@ class AdminApiService {
     });
   }
 
+  async getBadgeCounts(): Promise<{
+    sellerRequests: number;
+    emailSubscribers: number;
+    emailCampaigns: number;
+    announcements: number;
+    newUsers: number;
+    disputes: number;
+  }> {
+    const response = await api.call<ApiResponse<{
+      sellerRequests: number;
+      emailSubscribers: number;
+      emailCampaigns: number;
+      announcements: number;
+      newUsers: number;
+      disputes: number;
+    }>>(`${this.baseURL}/badge-counts`, { method: 'GET' });
+    return response.data;
+  }
+
   // ====================== TEAM MANAGEMENT ======================
   
   async getTeamMembers(): Promise<TeamMember[]> {
@@ -304,11 +329,12 @@ class AdminApiService {
   }): Promise<{ subscribers: EmailSubscriber[]; total: number }> {
     const queryParams = new URLSearchParams();
     if (filters?.search) queryParams.append('search', filters.search);
-    if (filters?.isVerified !== undefined) queryParams.append('isVerified', filters.isVerified.toString());
+    if (filters?.isVerified !== undefined) queryParams.append('isActive', (!filters.isVerified).toString()); // Note: isActive is opposite of isVerified in your backend
     if (filters?.page) queryParams.append('page', filters.page.toString());
     if (filters?.limit) queryParams.append('limit', filters.limit.toString());
     
-    const url = `${this.baseURL}/email-subscribers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    // Make sure this URL matches your route
+    const url = `/admin/email-subscribers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     const response = await api.call<ApiResponse<{ subscribers: EmailSubscriber[]; total: number }>>(url, { method: 'GET' });
     return response.data;
   }

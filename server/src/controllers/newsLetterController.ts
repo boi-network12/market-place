@@ -4,6 +4,12 @@ import { NewsletterService } from '../services/newsLetterService';
 import { AppError } from '../middlewares/errorMiddleware';
 import { logger } from '../utils/logger';
 
+interface AuthRequest extends Request {
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
+}
+
 export class NewsletterController {
   
   /**
@@ -84,8 +90,61 @@ export class NewsletterController {
       
       res.json({
         success: true,
+        data: {
+          subscribers: result.subscribers,
+          total: result.total,
+          page: result.page,
+          totalPages: result.totalPages,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+   static async sendToSubscribers(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { subject, content, htmlContent, subscriberIds } = req.body;
+      
+      if (!subject || !content) {
+        throw new AppError('Subject and content are required', 400);
+      }
+      
+      const result = await NewsletterService.sendToSubscribers(
+        subject, 
+        content || htmlContent, 
+        subscriberIds
+      );
+      
+      res.json({
+        success: true,
+        message: `Email sent to ${result.sent} subscribers`,
         data: result,
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Export subscribers (Admin only)
+   * GET /api/admin/email-subscribers/export
+   */
+  static async exportSubscribers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { format = 'csv' } = req.query;
+      
+      const data = await NewsletterService.exportSubscribers(format as 'csv' | 'json');
+      
+      if (format === 'csv') {
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=subscribers.csv');
+        res.send(data);
+      } else {
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', 'attachment; filename=subscribers.json');
+        res.send(data);
+      }
     } catch (error) {
       next(error);
     }

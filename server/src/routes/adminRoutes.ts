@@ -5,12 +5,16 @@ import { authMiddleware } from '../middlewares/authMiddleware';
 import { requireAdmin, requirePermission, requireSuperAdmin } from '../middlewares/adminMiddleware';
 import { body } from 'express-validator';
 import { validate } from '../middlewares/validationMiddleware';
+import { NewsletterSubscriber } from '../models/NewsletterSubscriberModel';
+import { NewsletterController } from '../controllers/newsLetterController';
 
 const router = Router();
 
 // All admin routes require authentication and admin role
 router.use(authMiddleware);
 router.use(requireAdmin);
+
+router.get('/badge-counts', requirePermission('viewReports'), AdminController.getBadgeCounts);
 
 // ====================== USER MANAGEMENT ======================
 router.get('/users', requirePermission('manageUsers'), AdminController.getAllUsers);
@@ -48,12 +52,9 @@ router.post('/announcements/:announcementId/send', requirePermission('manageAnno
 router.delete('/announcements/:announcementId', requirePermission('manageAnnouncements'), AdminController.deleteAnnouncement);
 
 // ====================== EMAIL SUBSCRIBER MANAGEMENT ======================
-router.get('/email-subscribers', requirePermission('manageEmailSubscribers'), AdminController.getEmailSubscribers);
-router.post('/email-subscribers/send', requirePermission('manageEmailSubscribers'), [
-  body('subject').notEmpty(),
-  body('content').notEmpty(),
-], validate, AdminController.sendEmailToSubscribers);
-router.get('/email-subscribers/export', requirePermission('manageEmailSubscribers'), AdminController.exportSubscribers);
+router.get('/email-subscribers', requirePermission('manageEmailSubscribers'), NewsletterController.getSubscribers);
+router.post('/email-subscribers/send', requirePermission('manageEmailSubscribers'), NewsletterController.sendToSubscribers);
+router.get('/email-subscribers/export', requirePermission('manageEmailSubscribers'), NewsletterController.exportSubscribers);
 router.post('/email-subscribers/unsubscribe', requirePermission('manageEmailSubscribers'), AdminController.unsubscribeSubscriber);
 
 router.get('/stats', requirePermission('viewReports'), AdminController.getDashboardStats);

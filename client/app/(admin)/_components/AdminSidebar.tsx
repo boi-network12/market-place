@@ -32,7 +32,8 @@ import {
   AlertCircle,
   UserCheck,
   Star,
-  Trash2
+  Trash2,
+  Bell
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -44,6 +45,7 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   badge?: number;
+  badgeColor?: 'red' | 'green' | 'blue' | 'yellow' | 'purple';
 }
 
 interface TeamMember {
@@ -62,21 +64,77 @@ interface SearchUserResult {
 }
 
 // ============ Navigation Data ============
-const navigation: NavItem[] = [
+// const navigation: NavItem[] = [
+//   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+//   { name: 'Users', href: '/admin/users', icon: Users },
+//   { name: 'Sellers', href: '/admin/sellers', icon: FolderKanban },
+//   { name: 'Products', href: '/admin/products', icon: Package },
+//   { name: 'Categories', href: '/admin/categories', icon: FileText },
+//   { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
+//   { name: 'Email Sub', href: '/admin/email-subscribers', icon: Mail, badge: 12 },
+//   { name: 'Budgets', href: '/admin/budgets', icon: ChartBar, badge: 3 },
+//   { name: 'Seller Request', href: '/admin/seller-requests', icon: Users, badge: 5 }
+// ];
+
+const getNavigationItems = (badgeCounts: {
+  sellerRequests: number;
+  emailSubscribers: number;
+  emailCampaigns: number;
+  announcements: number;
+  newUsers: number;
+  disputes: number;
+}): NavItem[] => [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { name: 'Users', href: '/admin/users', icon: Users },
+  { name: 'Users', href: '/admin/users', icon: Users, badge: badgeCounts.newUsers, badgeColor: 'green' },
   { name: 'Sellers', href: '/admin/sellers', icon: FolderKanban },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/categories', icon: FileText },
   { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
-  { name: 'Email Sub', href: '/admin/email-subscribers', icon: Mail, badge: 12 },
-  { name: 'Budgets', href: '/admin/budgets', icon: ChartBar, badge: 3 },
-  { name: 'Seller Request', href: '/admin/seller-requests', icon: Users, badge: 5 }
+  { 
+    name: 'Email Sub', 
+    href: '/admin/email-subscribers', 
+    icon: Mail, 
+    badge: badgeCounts.emailSubscribers + badgeCounts.emailCampaigns,
+    badgeColor: 'blue' 
+  },
+  { name: 'Budgets', href: '/admin/budgets', icon: ChartBar, badge: 3, badgeColor: 'yellow' },
+  { 
+    name: 'Seller Request', 
+    href: '/admin/seller-requests', 
+    icon: Users, 
+    badge: badgeCounts.sellerRequests,
+    badgeColor: 'red' 
+  },
+  { 
+    name: 'Announcements', 
+    href: '/admin/announcements', 
+    icon: Bell, 
+    badge: badgeCounts.announcements,
+    badgeColor: 'purple' 
+  }
 ];
 
 const secondaryNavigation: NavItem[] = [
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
+
+// Badge color styles
+const getBadgeStyles = (color?: string) => {
+  switch (color) {
+    case 'red':
+      return 'bg-red-500 text-white';
+    case 'green':
+      return 'bg-green-500 text-white';
+    case 'blue':
+      return 'bg-blue-500 text-white';
+    case 'yellow':
+      return 'bg-yellow-500 text-white';
+    case 'purple':
+      return 'bg-purple-500 text-white';
+    default:
+      return 'bg-red-500 text-white';
+  }
+};
 
 // ============ Helper Components ============
 
@@ -558,12 +616,32 @@ const NavLink = ({ item, isActive, isCollapsed, onNavigate }: NavLinkProps) => (
     >
       <item.icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : ''}`} />
       {!isCollapsed && (
-        <span className="font-medium text-sm flex-1">{item.name}</span>
+        <>
+          <span className="font-medium text-sm flex-1">{item.name}</span>
+          {item.badge !== undefined && item.badge > 0 && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className={`
+                px-2 py-0.5 text-xs font-bold rounded-full
+                ${getBadgeStyles(item.badgeColor)}
+                shadow-lg
+              `}
+            >
+              {item.badge > 99 ? '99+' : item.badge}
+            </motion.span>
+          )}
+        </>
       )}
-      {!isCollapsed && item.badge && (
-        <span className="px-2 py-0.5 text-xs font-semibold bg-red-500 text-white rounded-full">
-          {item.badge}
-        </span>
+      {isCollapsed && item.badge !== undefined && item.badge > 0 && (
+        <div className="absolute -top-1 -right-1">
+          <span className={`
+            flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold
+            ${getBadgeStyles(item.badgeColor)}
+          `}>
+            {item.badge > 9 ? '9+' : item.badge}
+          </span>
+        </div>
       )}
     </motion.div>
   </Link>
@@ -583,13 +661,27 @@ export default function AdminSidebar() {
     addTeamMember, 
     removeTeamMember,
     searchUsersForTeam,
-    isLoading 
+    isLoading ,
+    badgeCounts,
+    fetchBadgeCounts
   } = useAdmin();
+
+  // Get navigation items with current badge counts
+  const navigation = getNavigationItems(badgeCounts);
 
   // Load team members
   useEffect(() => {
     fetchTeamMembers();
-  }, [fetchTeamMembers]);
+    fetchBadgeCounts();
+    
+    // Refresh badge counts every 30 seconds
+    const interval = setInterval(() => {
+      fetchBadgeCounts();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [fetchTeamMembers, fetchBadgeCounts]);
+
 
   // Load collapsed state from localStorage
   useEffect(() => {

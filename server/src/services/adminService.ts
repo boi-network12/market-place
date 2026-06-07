@@ -6,6 +6,7 @@ import { logger } from '../utils/logger';
 import mongoose, { Schema, Types } from 'mongoose';
 import { Announcement, EmailSubscriber, IAnnouncement, IEmailSubscriber, ITeamMember, TeamMember } from '../models/AdminTeamModel';
 import { SellerRequest } from '../models/SellerRequestModel';
+import { NewsletterSubscriber } from '../models/NewsletterSubscriberModel';
 
 
 export class AdminService {
@@ -516,7 +517,7 @@ export class AdminService {
     isVerified?: boolean;
     page?: number;
     limit?: number;
-  }): Promise<{ subscribers: IEmailSubscriber[]; total: number }> {
+  }): Promise<{ subscribers: any[]; total: number }> {
     const page = Math.max(1, filters.page || 1);
     const limit = Math.min(100, filters.limit || 20);
     const skip = (page - 1) * limit;
@@ -528,14 +529,15 @@ export class AdminService {
     if (filters.isVerified !== undefined) {
       query.isVerified = filters.isVerified;
     }
-    query.unsubscribedAt = null;
+    // Important: Only get active subscribers (not unsubscribed)
+    query.unsubscribedAt = null; // or { $exists: false } depending on your schema
 
     const [subscribers, total] = await Promise.all([
-      EmailSubscriber.find(query)
+      NewsletterSubscriber.find(query)  // Make sure this is NewsletterSubscriber, not EmailSubscriber
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
-      EmailSubscriber.countDocuments(query),
+      NewsletterSubscriber.countDocuments(query),
     ]);
 
     return { subscribers, total };
@@ -546,12 +548,12 @@ export class AdminService {
     html: string,
     subscriberIds?: string[]
   ): Promise<{ success: boolean; sent: number; failed: number }> {
-    let subscribers: IEmailSubscriber[] = [];
+    let subscribers: any[] = [];
     
     if (subscriberIds && subscriberIds.length > 0) {
-      subscribers = await EmailSubscriber.find({ _id: { $in: subscriberIds }, unsubscribedAt: null });
+      subscribers = await NewsletterSubscriber.find({ _id: { $in: subscriberIds }, unsubscribedAt: null });
     } else {
-      subscribers = await EmailSubscriber.find({ unsubscribedAt: null });
+      subscribers = await NewsletterSubscriber.find({ unsubscribedAt: null });
     }
 
     let sent = 0;
@@ -587,7 +589,7 @@ export class AdminService {
   }
 
   static async exportSubscribers(format: 'csv' | 'json'): Promise<string> {
-    const subscribers = await EmailSubscriber.find({ unsubscribedAt: null });
+    const subscribers = await NewsletterSubscriber.find({ unsubscribedAt: null });
 
     if (format === 'csv') {
       const headers = ['Email', 'Interests', 'Source', 'Verified', 'Created At'];

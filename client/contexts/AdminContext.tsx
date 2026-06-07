@@ -50,6 +50,16 @@ interface AdminContextType {
   
   // Dashboard
   fetchDashboardStats: () => Promise<void>;
+
+  badgeCounts: {
+    sellerRequests: number;
+    emailSubscribers: number;
+    emailCampaigns: number;
+    announcements: number;
+    newUsers: number;
+    disputes: number;
+  };
+  fetchBadgeCounts: () => Promise<void>;
 }
 
 interface SellerRequestFormData {
@@ -340,7 +350,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   // ====================== EMAIL SUBSCRIBER MANAGEMENT ======================
   
-  const fetchEmailSubscribers = useCallback(async (filters?: { search?: string; isVerified?: boolean; page?: number }) => {
+  const fetchEmailSubscribers = useCallback(async (filters?: {
+    search?: string;
+    isVerified?: boolean;
+    page?: number;
+  }) => {
     if (!isAdmin) return;
     
     setIsLoading(true);
@@ -354,7 +368,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isAdmin]);
 
-  const sendEmailToSubscribers = useCallback(async (subject: string, content: string, subscriberIds?: string[]) => {
+    const sendEmailToSubscribers = useCallback(async (subject: string, content: string, subscriberIds?: string[]) => {
     if (!isAdmin) return { sent: 0, failed: 0 };
     
     setIsLoading(true);
@@ -368,6 +382,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     }
   }, [isAdmin]);
+
 
   const exportSubscribers = useCallback(async (format: 'csv' | 'json') => {
     if (!isAdmin) return;
@@ -399,6 +414,27 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isAdmin]);
 
+  const [badgeCounts, setBadgeCounts] = useState({
+  sellerRequests: 0,
+  emailSubscribers: 0,
+  emailCampaigns: 0,
+  announcements: 0,
+  newUsers: 0,
+  disputes: 0
+});
+
+// Add method to fetch badge counts:
+const fetchBadgeCounts = useCallback(async () => {
+    if (!isAdmin) return;
+    
+    try {
+      const counts = await adminApi.getBadgeCounts();
+      setBadgeCounts(counts);
+    } catch (error) {
+      console.error('Failed to fetch badge counts:', error);
+    }
+  }, [isAdmin]);
+
   // Auto-fetch data when admin logs in
   useEffect(() => {
     if (isAdmin && isAuthenticated) {
@@ -407,8 +443,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       fetchUsers({ page: 1 });
       fetchSellerRequests('pending');
       fetchTeamMembers();
+      fetchBadgeCounts();
+
+      const interval = setInterval(fetchBadgeCounts, 30000);
+      return () => clearInterval(interval);
     }
-  }, [isAdmin, isAuthenticated, fetchDashboardStats, fetchUsers, fetchSellerRequests, fetchTeamMembers]);
+  }, [isAdmin, isAuthenticated, fetchDashboardStats, fetchUsers, fetchSellerRequests, fetchTeamMembers, fetchBadgeCounts]);
 
   const value: AdminContextType = {
     isLoading,
@@ -446,6 +486,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     fetchEmailSubscribers,
     sendEmailToSubscribers,
     exportSubscribers,
+
+    badgeCounts,
+    fetchBadgeCounts,
     
     fetchDashboardStats,
   };

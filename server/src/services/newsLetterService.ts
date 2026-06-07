@@ -94,7 +94,8 @@ export class NewsletterService {
     }
   }
   
-  static async getSubscribers(filters?: {
+  // services/newsletter.service.ts
+static async getSubscribers(filters?: {
     search?: string;
     isActive?: boolean;
     page?: number;
@@ -105,15 +106,29 @@ export class NewsletterService {
     const skip = (page - 1) * limit;
     
     const query: any = {};
+    
     if (filters?.search) {
       query.email = { $regex: filters.search, $options: 'i' };
     }
+    
+    // Fix: Handle isActive correctly - active means NOT unsubscribed
     if (filters?.isActive !== undefined) {
       if (filters.isActive) {
-        query.unsubscribedAt = null;
+        // Active subscribers: unsubscribedAt doesn't exist OR is null
+        query.$or = [
+          { unsubscribedAt: { $exists: false } },
+          { unsubscribedAt: null }
+        ];
       } else {
-        query.unsubscribedAt = { $ne: null };
+        // Inactive subscribers: have an unsubscribedAt date
+        query.unsubscribedAt = { $exists: true, $ne: null };
       }
+    } else {
+      // Default: only show active subscribers
+      query.$or = [
+        { unsubscribedAt: { $exists: false } },
+        { unsubscribedAt: null }
+      ];
     }
     
     const [subscribers, total] = await Promise.all([
@@ -153,5 +168,75 @@ export class NewsletterService {
     } catch (error) {
       logger.error('Failed to notify admins about new subscriber:', error);
     }
+  }
+
+  static async sendToSubscribers(
+    subject: string, 
+    htmlContent: string, 
+    subscriberIds?: string[]
+  ): Promise<{ sent: number; failed: number }> {
+    let subscribers: INewsletterSubscriber[] = [];
+    
+    if (subscriberIds && subscriberIds.length > 0) {
+      subscribers = await NewsletterSubscriber.find({ 
+        _id: { $in: subscriberIds }, 
+        unsubscribedAt: null 
+      });
+    } else {
+      subscribers = await NewsletterSubscriber.find({ unsubscribedAt: null });
+    }
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const subscriber of subscribers) {
+      try {
+        await EmailService.sendEmail({
+          to: subscriber.email,
+          subject,
+          html: this.buildNewsletterEmail(subscriber.email, subject, htmlContent),
+        });
+        sent++;
+      } catch (error) {
+        logger.error(`Failed to send email to ${subscriber.email}:`, error);
+        failed++;
+      }
+    }
+
+    return { sent, failed };
+  }
+
+  static async exportSubscribers(format: 'csv' | 'json'): Promise<string> {
+    const subscribers = await NewsletterSubscriber.find({ unsubscribedAt: null });
+
+    if (format === 'csv') {
+      const headers = ['Email', 'Interests', 'Source', 'Verified', 'Created At'];
+      const rows = subscribers.map((s) => [
+        s.email,
+        s.interests.join('; '),
+        s.source,
+        s.isVerified ? 'Yes' : 'No',
+        s.createdAt.toISOString(),
+      ]);
+      
+      return [headers, ...rows].map(row => row.join(',')).join('\n');
+    } else {
+      return JSON.stringify(subscribers, null, 2);
+    }
+  }
+
+  private static buildNewsletterEmail(email: string, subject: string, htmlContent: string): string {
+    return `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #4f46e5;">Kamdi Market</h1>
+        </div>
+        ${htmlContent}
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; font-size: 12px; color: #999;">
+          <p>You're receiving this because you subscribed to our newsletter.</p>
+          <a href="${process.env.FRONTEND_URL}/unsubscribe?email=${encodeURIComponent(email)}" style="color: #4f46e5;">Unsubscribe</a>
+        </div>
+      </div>
+    `;
   }
 }

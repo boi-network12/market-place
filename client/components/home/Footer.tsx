@@ -136,6 +136,19 @@ export default function Footer() {
   const isSuccess = subscriptionStatus === 'success';
   const isError = subscriptionStatus === 'error';
 
+   // Get user-friendly message for duplicate email
+  const getDisplayMessage = () => {
+    if (isSuccess) return subscriptionMessage || "Successfully subscribed!";
+    if (isError) {
+      // Check if it's a duplicate email error
+      if (subscriptionMessage?.toLowerCase().includes('already subscribed')) {
+        return "This email is already subscribed to our newsletter.";
+      }
+      return subscriptionMessage || "Subscription failed. Please try again.";
+    }
+    return "";
+  };
+
   return (
     <footer className="relative bg-gray-900 dark:bg-gray-950 overflow-hidden">
       {/* Background gradient */}
@@ -213,24 +226,24 @@ export default function Footer() {
               </div>
 
               <AnimatePresence>
-                {status !== "idle" && (
+                {subscriptionStatus !== 'idle' && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     className={`p-3 rounded-lg ${
-                      status === "success"
+                      isSuccess
                         ? "bg-green-500/20 text-green-200 border border-green-500/30"
                         : "bg-red-500/20 text-red-200 border border-red-500/30"
                     }`}
                   >
                     <div className="flex items-center justify-center gap-2">
-                      {status === "success" ? (
+                      {isSuccess ? (
                         <CheckCircle className="h-4 w-4" />
                       ) : (
                         <XCircle className="h-4 w-4" />
                       )}
-                      <span className="text-sm">{message}</span>
+                      <span className="text-sm">{getDisplayMessage()}</span>
                     </div>
                   </motion.div>
                 )}

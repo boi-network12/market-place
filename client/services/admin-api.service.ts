@@ -120,11 +120,12 @@ export interface EmailSubscriber {
   source: string;
   isVerified: boolean;
   verifiedAt?: string;
-  metadata?: {
-    ipAddress?: string;
-    userAgent?: string;
+   metadata?: {
+    ip?: string;        // ✅ Correct field name
+    userAgent?: string; // ✅ Correct field name
     location?: string;
-  },
+    subscribedAt?: string;
+  };
   unsubscribedAt?: string;
   createdAt: string;
 }
@@ -329,11 +330,11 @@ class AdminApiService {
   }): Promise<{ subscribers: EmailSubscriber[]; total: number }> {
     const queryParams = new URLSearchParams();
     if (filters?.search) queryParams.append('search', filters.search);
-    if (filters?.isVerified !== undefined) queryParams.append('isActive', (!filters.isVerified).toString()); // Note: isActive is opposite of isVerified in your backend
+    // ✅ Fix: The backend expects 'isActive', not 'isVerified'
+    if (filters?.isVerified !== undefined) queryParams.append('isActive', filters.isVerified ? 'true' : 'false');
     if (filters?.page) queryParams.append('page', filters.page.toString());
     if (filters?.limit) queryParams.append('limit', filters.limit.toString());
     
-    // Make sure this URL matches your route
     const url = `/admin/email-subscribers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     const response = await api.call<ApiResponse<{ subscribers: EmailSubscriber[]; total: number }>>(url, { method: 'GET' });
     return response.data;

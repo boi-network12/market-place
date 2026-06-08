@@ -95,12 +95,12 @@ export class NewsletterService {
   }
   
   // services/newsletter.service.ts
-static async getSubscribers(filters?: {
+  static async getSubscribers(filters?: {
     search?: string;
     isActive?: boolean;
     page?: number;
     limit?: number;
-  }): Promise<{ subscribers: INewsletterSubscriber[]; total: number; page: number; totalPages: number }> {
+  }) {
     const page = Math.max(1, filters?.page || 1);
     const limit = Math.min(100, filters?.limit || 20);
     const skip = (page - 1) * limit;
@@ -111,25 +111,30 @@ static async getSubscribers(filters?: {
       query.email = { $regex: filters.search, $options: 'i' };
     }
     
-    // Fix: Handle isActive correctly - active means NOT unsubscribed
-    if (filters?.isActive !== undefined) {
-      if (filters.isActive) {
-        // Active subscribers: unsubscribedAt doesn't exist OR is null
-        query.$or = [
-          { unsubscribedAt: { $exists: false } },
-          { unsubscribedAt: null }
-        ];
-      } else {
-        // Inactive subscribers: have an unsubscribedAt date
-        query.unsubscribedAt = { $exists: true, $ne: null };
-      }
-    } else {
-      // Default: only show active subscribers
-      query.$or = [
-        { unsubscribedAt: { $exists: false } },
-        { unsubscribedAt: null }
-      ];
-    }
+    // if (filters?.isActive !== undefined) {
+    //   if (filters.isActive === true) {
+    //     query.$or = [
+    //       { unsubscribedAt: { $exists: false } },
+    //       { unsubscribedAt: null }
+    //     ];
+    //   } else {
+    //     query.unsubscribedAt = { $exists: true, $ne: null };
+    //   }
+    // } else {
+    //   // Default: show ONLY active subscribers (no unsubscribedAt)
+    //   query.$or = [
+    //     { unsubscribedAt: { $exists: false } },
+    //     { unsubscribedAt: null }
+    //   ];
+    // }
+    // Don't add default filter - let's see all documents first
+    
+    // DEBUG: Log the query
+    console.log('🔍 NewsletterSubscriber query:', JSON.stringify(query, null, 2));
+    
+    // DEBUG: Get total count without filters
+    const totalAll = await NewsletterSubscriber.countDocuments({});
+    console.log('📊 Total documents in collection:', totalAll);
     
     const [subscribers, total] = await Promise.all([
       NewsletterSubscriber.find(query)
@@ -138,6 +143,8 @@ static async getSubscribers(filters?: {
         .limit(limit),
       NewsletterSubscriber.countDocuments(query),
     ]);
+    
+    console.log('✅ Query returned:', subscribers.length, 'out of', totalAll, 'total documents');
     
     return {
       subscribers,

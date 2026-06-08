@@ -80,6 +80,8 @@ export class NewsletterController {
   static async getSubscribers(req: Request, res: Response, next: NextFunction) {
     try {
       const { search, isActive, page, limit } = req.query;
+
+      console.log('📧 Fetching subscribers with filters:', { search, isActive, page, limit });
       
       const result = await NewsletterService.getSubscribers({
         search: search as string,
@@ -87,6 +89,8 @@ export class NewsletterController {
         page: page ? parseInt(page as string) : 1,
         limit: limit ? parseInt(limit as string) : 20,
       });
+
+      console.log('✅ Found subscribers:', result.subscribers.length, 'Total:', result.total);
       
       res.json({
         success: true,
